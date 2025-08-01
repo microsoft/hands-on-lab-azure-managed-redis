@@ -1,59 +1,48 @@
 {
-    "name": "Redis Containers",
-    "dockerFile": "Dockerfile",
-
-    "containerUser": "vscode",
-
-    "features": {
-        //Az CLI install
-        "azure-cli": {
-          "version":"latest"
-        },
-
-        "ghcr.io/devcontainers/features/docker-in-docker":{
-          "version":"latest",
-          "moby":"false"
-        },
-
-        // //Azure Function Core tools + Visual Studio Extension install
-        "ghcr.io/jlaundry/devcontainer-features/azure-functions-core-tools:1":{},
-
-        //Node + npm install
-        "ghcr.io/devcontainers/features/node:1.6.1": {
-          "version": "20"
-        },
-
-        //Terraform + tflint install
-        "ghcr.io/devcontainers/features/terraform:latest":{ 
-          "version":"latest",
-          "tflint":"latest"
-      }
+  "name": "Redis Containers",
+  "dockerFile": "Dockerfile",
+  "containerUser": "vscode",
+  "features": {
+    //Az CLI install
+    "ghcr.io/devcontainers/features/azure-cli:latest": {},
+    "ghcr.io/devcontainers/features/docker-in-docker": {
+      "version": "latest",
+      "moby": "false"
     },
-
-    //PORT Forward config : 
-    //5076 : Asp Net Core HTTP Debug port 
-    //7062 : Asp Net Core HTTPS Debug port
-    //7071 : Azure Function Cache-Refresh-Func Debug port
-    //7072 : Azure Function History-Func Debug port
-    //1000[0,1,2] : Azurite storage emulator used with Azure Function
-    "forwardPorts": [5076, 7062, 7071, 7072, 10000, 10001, 10002],
-
-    //Static Web App Cli Install
-    "updateContentCommand": "bash .devcontainer/setup.sh",
-
-    "customizations": {
-      // Configure properties specific to VS Code.
-      "vscode": {
-        // Add the IDs of extensions you want installed when the container is created.
-        "extensions": [
-          "ms-dotnettools.csharp", 
-          "ms-vscode.vscode-node-azure-pack",
-          "humao.rest-client", 
-          "azurite.azurite",
-          "ms-azurecache.vscode-azurecache"
-        ]
-      }
-    },
-    "remoteUser": "vscode"
-  }
-  
+    // //Azure Function Core tools + Visual Studio Extension install
+    "ghcr.io/jlaundry/devcontainer-features/azure-functions-core-tools:1": {},
+    // azd
+    "ghcr.io/azure/azure-dev/azd:latest": {}
+  },
+  //PORT Forward config : 
+  //5076 : Asp Net Core HTTP Debug port 
+  //7062 : Asp Net Core HTTPS Debug port
+  //7071 : Azure Function Cache-Refresh-Func Debug port
+  //7072 : Azure Function History-Func Debug port
+  //1000[0,1,2] : Azurite storage emulator used with Azure Function
+  "forwardPorts": [
+    5076,
+    7062,
+    7071,
+    7072,
+    10000,
+    10001,
+    10002
+  ],
+  //Static Web App Cli Install
+  "updateContentCommand": "bash .devcontainer/updateContentCommand.sh",
+  "customizations": {
+    // Configure properties specific to VS Code.
+    "vscode": {
+      // Add the IDs of extensions you want installed when the container is created.
+      "extensions": [
+        "ms-dotnettools.csharp",
+        "ms-vscode.vscode-node-azure-pack",
+        "humao.rest-client",
+        "azurite.azurite",
+        "ms-azurecache.vscode-azurecache"
+      ]
+    }
+  },
+  "remoteUser": "vscode"
+}

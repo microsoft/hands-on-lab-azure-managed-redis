@@ -29,9 +29,6 @@ jobs:
     - name: Database sample data zip
       run:  cd src/seed && zip -r ../../database-sample-data.zip .
 
-    - name: Infrastructure As Code zip
-      run:  cd terraform && zip -r ../terraform.zip .
-
     - name: Update release
       uses: ncipollo/release-action@v1.12.0
       with:

@@ -1,8 +1,12 @@
 {
 	"folders": [
 		{
-			"path": "..",
-			"name":"Hands On Lab - Redis"
+			"path": "../docs",
+			"name": "Docs"
+		},
+		{
+			"path": "../infra",
+			"name": "Infra"
 		},
 		{
 			"path": "../src/catalog-api",

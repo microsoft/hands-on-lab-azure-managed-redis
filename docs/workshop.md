@@ -3,7 +3,7 @@ published: true
 type: workshop
 title: Product Hands-on Lab - Redis Cache in the Azure world
 short_title: Redis Workshop
-description: This workshop will show you how Azure Cache for Redis is integrated with other Azure Services.
+description: This workshop will show you how Azure Managed Redis is integrated with other Azure Services.
 level: beginner # Required. Can be 'beginner', 'intermediate' or 'advanced'
 navigation_numbering: false
 authors: # Required. You can add as many authors as needed
@@ -17,13 +17,13 @@ contacts: # Required. Must match the number of authors
   - "@ikhemissi"
   - "@yannduval"
 duration_minutes: 120
-tags: azure, azure cache for redis, database, serverless, apim, cache, csu
+tags: azure, Azure Managed Redis, database, serverless, apim, cache, csu
 navigation_levels: 3
 ---
 
-# Azure Cache for Redis in the Azure World
+# Azure Managed Redis in the Azure World
 
-Welcome to this Azure Cache for Redis Workshop. You will be experimenting with Azure Cache for Redis in multiple labs to discover how it's integrated to other Azure services by running a real world scenarios. Don't worry, even if the challenges will increase in difficulty, this is a step by step lab, you will be guided through the whole process.
+Welcome to this Azure Managed Redis Workshop. You will be experimenting with Azure Managed Redis in multiple labs to discover how it's integrated to other Azure services by running a real world scenarios. Don't worry, even if the challenges will increase in difficulty, this is a step by step lab, you will be guided through the whole process.
 
 During this workshop you will have the instructions to complete each steps. It is recommended to search for the answers in the provided resources and links before looking at the solutions placed under the **📚 Toggle solution** panel for a challenge based learning experience.
 
@@ -123,7 +123,7 @@ az account set --subscription <subscription-id>
 az provider register --namespace 'Microsoft.Web'
 # Azure Monitor
 az provider register --namespace 'Microsoft.OperationalInsights'
-# Azure Cache for Redis
+# Azure Managed Redis
 az provider register --namespace 'Microsoft.Cache'
 # API Management
 az provider register --namespace 'Microsoft.ApiManagement'
@@ -151,11 +151,11 @@ az provider register --namespace 'Microsoft.DocumentDB'
 
 ---
 
-# Lab 1 : Azure Cache for Redis
+# Lab 1 : Azure Managed Redis
 
 ## Setting up the infrastructure in Azure
 
-If you look at the project, you will see a `terraform` folder. It contains the infrastructure as code that you will use to deploy the infrastructure for this Hands On Lab. This will deploy a series of Azure services that you will use in combination with Azure Cache for Redis.
+If you look at the project, you will see a `terraform` folder. It contains the infrastructure as code that you will use to deploy the infrastructure for this Hands On Lab. This will deploy a series of Azure services that you will use in combination with Azure Managed Redis.
 
 We need to specify the subscription we want to use:
 
@@ -217,10 +217,10 @@ The architecture is composed of the following elements:
 - An Azure Static Web App that will be used to display the data from the API
 - An App Service that will host an API and store the data in a Azure Cosmos DB
 - An APIM which will be used as a facade for the APIs
-- An Azure Cache for Redis that will be used to cache the data of the API
-- A first Azure Function that will be triggered by an event of the Azure Cache for Redis to refresh the cache when the data expires
-- A second Azure Function that will be used to retrieve and store the navigation history of a specific user in Azure Cache for Redis
-- Azure Monitor that will be used to monitor the Azure Cache for Redis
+- An Azure Managed Redis that will be used to cache the data of the API
+- A first Azure Function that will be triggered by an event of the Azure Managed Redis to refresh the cache when the data expires
+- A second Azure Function that will be used to retrieve and store the navigation history of a specific user in Azure Managed Redis
+- Azure Monitor that will be used to monitor the Azure Managed Redis
 
 You will discover all these elements during this Hands On Lab.
 
@@ -293,26 +293,26 @@ In the future it will allow you to:
 
 ## Redis basics 
 
-To be able to use Azure Cache for Redis, you need to understand the basics of Redis. Redis is an open source, in-memory data structure store, used as a database, cache, and message broker. It supports data structures such as strings, hashes, lists, sets, sorted sets with range queries, bitmaps, hyperloglogs, geospatial indexes with radius queries and streams.
+To be able to use Azure Managed Redis, you need to understand the basics of Redis. Redis is an open source, in-memory data structure store, used as a database, cache, and message broker. It supports data structures such as strings, hashes, lists, sets, sorted sets with range queries, bitmaps, hyperloglogs, geospatial indexes with radius queries and streams.
 
 <div class="tip" data-title="Tips">
 
-> While you are going to use some of these data structures through the course of this lab, it will mainly focus on scenarios and connecting Azure Services with Azure Cache for Redis. 
+> While you are going to use some of these data structures through the course of this lab, it will mainly focus on scenarios and connecting Azure Services with Azure Managed Redis. 
 >
-> You might want to practice with another lab focused on [interacting with Azure Cache for Redis Data Structures][redis-practice-lab]. 
+> You might want to practice with another lab focused on [interacting with Azure Managed Redis Data Structures][redis-practice-lab]. 
 
 </div>
 
-These structures are available with any of the pricing tiers available for an Azure Cache for Redis:
+These structures are available with any of the pricing tiers available for an Azure Managed Redis:
 - **Basic**: An OSS Redis cache running on a single VM. This tier has no service-level agreement (SLA) and is ideal for development/test and noncritical workloads.
 - **Standard**: An OSS Redis cache running on two VMs in a replicated configuration.
 - **Premium**: High-performance OSS Redis caches. This tier offers higher throughput, lower latency, better availability, and more features. Premium caches are deployed on more powerful VMs compared to the VMs for Basic or Standard caches.
 - **Enterprise**: High-performance caches **powered by Redis Inc.’s Redis Enterprise software**. This tier supports Redis modules including RediSearch, RedisBloom, RedisJSON, and RedisTimeSeries. Also, it offers even higher availability than the Premium tier.
 - **Enterprise Flash**: Cost-effective large caches powered by Redis Inc.’s Redis Enterprise software. This tier extends Redis data storage to nonvolatile memory, which is cheaper than DRAM, on a VM. It reduces the overall per-GB memory cost.
 
-Let's see quickly how to interact with Azure Cache for Redis. Go to your resource group, search the Azure Cache for Redis resource, select it and in the left menu, click on **Overview** and click on the **Console** button:
+Let's see quickly how to interact with Azure Managed Redis. Go to your resource group, search the Azure Managed Redis resource, select it and in the left menu, click on **Overview** and click on the **Console** button:
 
-![Azure Cache for Redis Console](./assets/azure-cache-for-redis-console.png)
+![Azure Managed Redis Console](./assets/azure-cache-for-redis-console.png)
 
 Now inside the console, let's play with basic Redis commands.
 
@@ -357,7 +357,7 @@ ping
 
 It should return `PONG` which means that Redis is working.
 
-![Azure Cache for Redis Console](./assets/azure-cache-for-redis-console-demo.png)
+![Azure Managed Redis Console](./assets/azure-cache-for-redis-console-demo.png)
 
 To summarize, you can use the following basic commands to interact with Redis:
 
@@ -376,13 +376,13 @@ To summarize, you can use the following basic commands to interact with Redis:
 
 ---
 
-# Lab 2 : Use Azure Cache for Redis in your API
+# Lab 2 : Use Azure Managed Redis in your API
 
-In this lab, you will see how to use Azure Cache for Redis in your API to improve its performance. This API is an ASP.NET Web API written in .NET 8 and you will use the [StackExchange.Redis][stackexchange-redis] NuGet package to interact with Redis. One of the goal of this API is to provide a list of products that you will display in a web application.
+In this lab, you will see how to use Azure Managed Redis in your API to improve its performance. This API is an ASP.NET Web API written in .NET 8 and you will use the [StackExchange.Redis][stackexchange-redis] NuGet package to interact with Redis. One of the goal of this API is to provide a list of products that you will display in a web application.
 
 <div class="tip" data-title="Tips">
 
-> Redis Cache has a set of different clients to connect to it. For your real world scenario, pick the client that fits your preferred development language as detailed [here][redis-dev-clients] : All of these are compatible with Azure Cache for Redis instances.
+> Redis Cache has a set of different clients to connect to it. For your real world scenario, pick the client that fits your preferred development language as detailed [here][redis-dev-clients] : All of these are compatible with Azure Managed Redis instances.
 
 </div>
 
@@ -390,10 +390,10 @@ In this lab, you will see how to use Azure Cache for Redis in your API to improv
 
 <div class="info" data-title="Note">
 
-> This lab relies on two different data store systems : Azure Cosmos DB and Azure Cache for Redis. While Redis queries are faster than the ones sent to a Serverless Azure Cosmos DB instance (mainly thanks to the **In-Memory data storage**), the overall latency difference on end to end API call might not be so clearly noticeable.
-> In average, pure Azure Cache for Redis calls come back under 1 ms, while a Serverless Azure Cosmos DB Instance will respond in a few milliseconds.  
+> This lab relies on two different data store systems : Azure Cosmos DB and Azure Managed Redis. While Redis queries are faster than the ones sent to a Serverless Azure Cosmos DB instance (mainly thanks to the **In-Memory data storage**), the overall latency difference on end to end API call might not be so clearly noticeable.
+> In average, pure Azure Managed Redis calls come back under 1 ms, while a Serverless Azure Cosmos DB Instance will respond in a few milliseconds.  
 >
-> Between the performance optimizations at a Serverless Azure Cosmos DB Instance doors, the scenario with a single user calling the API combined with such a small volume of `products` data persisted in Azure Cosmos DB, the end to end API response time discrepancy between Azure Cache for Redis and Cosmos DB  can be reduced.
+> Between the performance optimizations at a Serverless Azure Cosmos DB Instance doors, the scenario with a single user calling the API combined with such a small volume of `products` data persisted in Azure Cosmos DB, the end to end API response time discrepancy between Azure Managed Redis and Cosmos DB  can be reduced.
 >
 > To clearly identify calls' response with or without cache, you'll add an artificial high latency while interacting with Azure Cosmos DB .
 > To do so, you'll find an environment variable in appsettings.json.template named `SIMULATED_DB_LATENCY_IN_SECONDS` that you'll have to fill in : The rest of the application code is ready to take this value into account.
@@ -432,9 +432,9 @@ Inside the Azure Portal, go to your resource group, search for the Azure Cosmos 
 
 ![Cosmos DB Keys](./assets/cosmos-db-keys.png)
 
-Then inside the Azure Portal, go to your resource group, search the Azure Cache for Redis, select it and in the left menu, click on **Access keys**. Then copy the **Primary Connection String** and replace `"AZURE_REDIS_CONNECTION_STRING"` value in the `appsettings.Development.json` file :
+Then inside the Azure Portal, go to your resource group, search the Azure Managed Redis, select it and in the left menu, click on **Access keys**. Then copy the **Primary Connection String** and replace `"AZURE_REDIS_CONNECTION_STRING"` value in the `appsettings.Development.json` file :
 
-![Azure Cache for Redis Keys](./assets/azure-cache-for-redis-keys.png)
+![Azure Managed Redis Keys](./assets/azure-cache-for-redis-keys.png)
 
 You can set `SIMULATED_DB_LATENCY_IN_SECONDS` to `"1"` to create artificial latency to ease perception over cache/no cache data retrieval response time.
 
@@ -461,7 +461,7 @@ Depending on the environment you are using :
 
 ## Add caching to your API
 
-The goal of this part is to set up the logic to interact with Azure Cache for Redis to store and retrieve the products list, and improve the overall latency of the `/products` endpoint. 
+The goal of this part is to set up the logic to interact with Azure Managed Redis to store and retrieve the products list, and improve the overall latency of the `/products` endpoint. 
 Most of the bricks you will need for the lab are provided in the `ProductCacheService.cs` class preconfigured for you. You will need to implement the caching logic using these bricks to complete the lab.
 
 If you open it you will see two methods:
@@ -472,7 +472,7 @@ They both use the `IRedisService` interface to interact with the cache and use t
 
 <div class="tip" data-title="Tips">
 
-> These Get & Set Async methods have been built specifically for this lab to simplify exception handling and serialization as much as possible in your interaction with Azure Cache for Redis.
+> These Get & Set Async methods have been built specifically for this lab to simplify exception handling and serialization as much as possible in your interaction with Azure Managed Redis.
 > However, the actual Get and Set queries sent to the Redis Cache reside in the simple methods provided by the StackExchange.Redis package, and that you can see in the `RedisService.cs` class as the extract below : 
 > 
 > ```csharp
@@ -483,9 +483,9 @@ They both use the `IRedisService` interface to interact with the cache and use t
 
 </div>
 
-Now it is time to work with Azure Cache for Redis to retrieve and return the list of products provided by the persistence tier played by Azure Cosmos DB in this lab's scenario. 
+Now it is time to work with Azure Managed Redis to retrieve and return the list of products provided by the persistence tier played by Azure Cosmos DB in this lab's scenario. 
 
-If no product exists in your Azure Cache for Redis Instance, then you will need to retrieve a fresh list of products from your persisting database (Azure Cosmos DB) and rehydrate the cache with this fresh data. 
+If no product exists in your Azure Managed Redis Instance, then you will need to retrieve a fresh list of products from your persisting database (Azure Cosmos DB) and rehydrate the cache with this fresh data. 
 This way, the next call will extract the list of products directly from the cache, improving the overall request performance, as well as freeing up resources for the database to focus on actual data persistence activities.
 
 <div class="task" data-title="Tasks">
@@ -560,7 +560,7 @@ Right click on your App Service in the Visual Studio Code Azure extension panel 
 
 ![Deploy to Web App](./assets/app-service-deploy-to-web-app.png)
 
-Then, select the `catalog-api` folder and click on the **Deploy** button. Wait a few minutes for the deployment to finish. All the environment variables such as the connection string to Azure Cache for Redis and Azure Cosmos DBwas already configured in the Azure App Service for you by the infrastructure as code.
+Then, select the `catalog-api` folder and click on the **Deploy** button. Wait a few minutes for the deployment to finish. All the environment variables such as the connection string to Azure Managed Redis and Azure Cosmos DBwas already configured in the Azure App Service for you by the infrastructure as code.
 
 When it's done go to your App Service resource on Azure and click on the **Browse** button. Navigate to the `/products` endpoint and you should see the list of products:
 
@@ -606,7 +606,7 @@ Now click on the **Browse** button in the **Overview** of your static web app to
 
 # Lab 3 : Add cache to your API with APIM
 
-In the previous lab, you saw how to add code in your API to be able to use an Azure Cache for Redis. In this lab, you will see how to add a cache to your API without modifing its code.
+In the previous lab, you saw how to add code in your API to be able to use an Azure Managed Redis. In this lab, you will see how to add a cache to your API without modifing its code.
 
 ## Architecture reminder
 
@@ -614,11 +614,11 @@ If you look at the architecture that you deployed for this workshop, remember th
 
 ![Architecture reminder](./assets/architecture.png)
 
-The APIM is used as a facade for all your APIs (in this case you only have one), in the next section you will discover how to add a cache on your APIs using the APIM and Azure Cache for Redis.
+The APIM is used as a facade for all your APIs (in this case you only have one), in the next section you will discover how to add a cache on your APIs using the APIM and Azure Managed Redis.
 
 ## Disabling cache in your API
 
-In the previous lab, you added code in your API to use an Azure Cache for Redis directly on the `/products` endpoint. To avoid modifying the code of your API, we have added an environment variable called `PRODUCT_LIST_CACHE_DISABLE` that you can use to enable or disable the cache on this endpoint.
+In the previous lab, you added code in your API to use an Azure Managed Redis directly on the `/products` endpoint. To avoid modifying the code of your API, we have added an environment variable called `PRODUCT_LIST_CACHE_DISABLE` that you can use to enable or disable the cache on this endpoint.
 
 To disable the cache, you need to set the value of this environment variable to `1`. To do this, go to your resource group, search the App service, select it and in the left menu, click on **Environment variables**. 
 You will see the `PRODUCT_LIST_CACHE_DISABLE` environment variable, select the edit button:
@@ -637,11 +637,11 @@ You can check the response time of the last request (e.g. GET `/products`) in th
 
 After disabling the caching of the list of products in the application code, it is time to enable it on the APIM level.
 
-The first thing that you need to do, is to connect your Azure Cache for Redis to your APIM by adding it as an external cache in APIM configuration.
+The first thing that you need to do, is to connect your Azure Managed Redis to your APIM by adding it as an external cache in APIM configuration.
 
 <div class="task" data-title="Tasks">
 
-> - Inside your APIM link your Azure Cache for Redis as an external cache
+> - Inside your APIM link your Azure Managed Redis as an external cache
 > - Make sure to choose the `Default` region to be able to use it from all your APIM instances
 
 </div>
@@ -655,21 +655,21 @@ Go to your resource group, search the API Management service (APIM), select it a
 
 Then click on **Add** and fill the form with the following information:
 
-- In the `Cache instance` field, select the Azure Cache for Redis you deployed using the infrastructure as code
-- In the `Use from` field, set the region to `Default`, this will allow your Azure Cache for Redis to be used by all your APIM instances whatever their region.
+- In the `Cache instance` field, select the Azure Managed Redis you deployed using the infrastructure as code
+- In the `Use from` field, set the region to `Default`, this will allow your Azure Managed Redis to be used by all your APIM instances whatever their region.
 
 ![External cache form](./assets/apim-external-cache-form.png)
 
 Then, click the **Save** button.
 
-You should now see your Azure Cache for Redis in the list of external cache:
+You should now see your Azure Managed Redis in the list of external cache:
 
 ![External cache list](./assets/apim-external-cache-list.png)
 </details>
 
 ### Setup APIM Cache Policy globally
 
-In order to get your Azure Cache for Redis connected to your APIM, you need to configure it so that it can use it for caching.
+In order to get your Azure Managed Redis connected to your APIM, you need to configure it so that it can use it for caching.
 
 To do this, you will use caching policies.
 
@@ -786,7 +786,7 @@ Then, add the following policy in the outbound block of the policy:
 
 This policy will store the result of the operation in the cache using the key `products:all` and the value of the response body. It will store it for 60 seconds. Of course, you can change the key and the duration to fit your needs.
 
-Notice the `external` cache type is used in both policies. This is because you are using an external cache which is Azure Cache for Redis in your case. If you were using the internal cache of the APIM, you would have used the `internal` cache type.
+Notice the `external` cache type is used in both policies. This is because you are using an external cache which is Azure Managed Redis in your case. If you were using the internal cache of the APIM, you would have used the `internal` cache type.
 
 Then, click on the **Save** button.
 
@@ -834,7 +834,7 @@ You will be able to get more metrics about the performance of your cache in Lab 
 
 # Lab 4 : Event-Driven Architecture 
 
-In this lab you will see how to create cloud-native applications which can integrate with Azure Cache for Redis.
+In this lab you will see how to create cloud-native applications which can integrate with Azure Managed Redis.
 
 You will have to create 2 Function Apps which react to changes in Redis to perform an action:
 - `cache-refresh-func`: detect expired cache keys and trigger a cache warm up to re-populate them
@@ -844,7 +844,7 @@ You will have to create 2 Function Apps which react to changes in Redis to perfo
 
 In the previous lab about APIM you saw how to add a cache to your API without modifying its code. In this lab you will see how to refresh the cache when the data expired before the data is requested by the user.
 
-The idea is to use an [Azure Function][azure-function-overview] triggered by an Azure Cache for Redis event to refresh the cache when the data expired.
+The idea is to use an [Azure Function][azure-function-overview] triggered by an Azure Managed Redis event to refresh the cache when the data expired.
 
 Azure Functions is a serverless solution that provides up-to-date compute resources, so you don't need to worry about deploying and maintaining infrastructure. It offers a common function programming model for various languages, allowing you to focus on your code while Azure Functions handles the rest.
 
@@ -857,11 +857,11 @@ Azure Functions run on the App Service platform, which provides features such as
 
 ### Keyspace Notifications
 
-While Azure Cache for Redis manages the wraping of Keyspace events, it's mandatory to detail the event types you're interested in.
+While Azure Managed Redis manages the wraping of Keyspace events, it's mandatory to detail the event types you're interested in.
 
-To do so, you'll set the maximum level of notification possible to notify all the existing events in the Azure Cache for Redis **Advanced Settings** and **notify-keyspace-events**:
+To do so, you'll set the maximum level of notification possible to notify all the existing events in the Azure Managed Redis **Advanced Settings** and **notify-keyspace-events**:
 
-![Azure Cache for Redis Console](./assets/azure-cache-for-redis-console-advanced-settings.png)
+![Azure Managed Redis Console](./assets/azure-cache-for-redis-console-advanced-settings.png)
 
 <div class="tip" data-title="Tips">
 
@@ -873,12 +873,12 @@ To do so, you'll set the maximum level of notification possible to notify all th
 
 Open the Azure Function project in Visual Studio Code which is under `src/cache-refresh-func` and go to the `RefreshProductsCache.cs`. You will discover a method called `ProductsEventsTrigger` which is empty.
 
-This method has an attribute called `RedisPubSubTrigger` which is used to trigger the function when an event is raised by the Azure Cache for Redis.
+This method has an attribute called `RedisPubSubTrigger` which is used to trigger the function when an event is raised by the Azure Managed Redis.
 
 <div class="task" data-title="Tasks">
 
-> - Define the conditions to trigger the function based on the expiration of a key in the Azure Cache for Redis
-> - The connection string of the Azure Cache for Redis is defined by the environment variable `AZURE_REDIS_CONNECTION_STRING`
+> - Define the conditions to trigger the function based on the expiration of a key in the Azure Managed Redis
+> - The connection string of the Azure Managed Redis is defined by the environment variable `AZURE_REDIS_CONNECTION_STRING`
 
 </div>
 
@@ -892,7 +892,7 @@ This method has an attribute called `RedisPubSubTrigger` which is used to trigge
 <details>
 <summary>📚 Toggle solution</summary>
 
-The `RedisPubSubTrigger` attribute is used to trigger the function when an event is raised by the Azure Cache for Redis, so the first parameter is the connection string and the second one is the pattern to listen to.
+The `RedisPubSubTrigger` attribute is used to trigger the function when an event is raised by the Azure Managed Redis, so the first parameter is the connection string and the second one is the pattern to listen to.
 
 The connection string environment key `AZURE_REDIS_CONNECTION_STRING` can be specified directly because Azure Functions automatically understands that it is a connection string. Then based on the [Redis key notification documentation][key-notifications] you can use the `expired` event so the pattern to listen to the expiration event of a key will be `__keyevent@0__:expired`.
 
@@ -913,7 +913,7 @@ The key to listen to is defined in the `local.settings.json.template` file in th
 
 All environment variables are defined in the `local.settings.json` that you must create if you want to run this Azure Function locally (you just have to copy paste the template from the `local.settings.json.template` file).
 
-If you run this Azure Function and listen to the expired keys in the Azure Cache for Redis, you will see that the function is triggered when a key with a suffix of `products:all` is expired. In fact this is because APIM add a prefix to it to avoid conflicts with other keys so you can see a key like `1_products:all` for instance.
+If you run this Azure Function and listen to the expired keys in the Azure Managed Redis, you will see that the function is triggered when a key with a suffix of `products:all` is expired. In fact this is because APIM add a prefix to it to avoid conflicts with other keys so you can see a key like `1_products:all` for instance.
 
 <div class="task" data-title="Tasks">
 
@@ -951,12 +951,12 @@ public async Task ProductsEventsTrigger(
 
 Now, to test and run it locally you need to create the `local.settings.json` file and copy the content of the `local.settings.json.template` file into it. 
 
-Then you need to set the `AZURE_REDIS_CONNECTION_STRING` environment variable to the connection string of your Azure Cache for Redis and update the `CATALOG_API_URL` with the url of APIM endpoint for the Catalog API.
+Then you need to set the `AZURE_REDIS_CONNECTION_STRING` environment variable to the connection string of your Azure Managed Redis and update the `CATALOG_API_URL` with the url of APIM endpoint for the Catalog API.
 
 
-The connection string for your Azure Cache for Redis can be found in the Azure Portal. Select your Azure Cache for Redis resource and in the left menu, click on **Access keys**. Then copy the value of the `Primary connection string` into your `local.settings.json` file.
+The connection string for your Azure Managed Redis can be found in the Azure Portal. Select your Azure Managed Redis resource and in the left menu, click on **Access keys**. Then copy the value of the `Primary connection string` into your `local.settings.json` file.
 
-![Azure Cache for Redis connection string][azure-cache-for-redis-connection-string]
+![Azure Managed Redis connection string][azure-cache-for-redis-connection-string]
 
 To set the `CATALOG_API_URL` environment variable, go to your resource group, search the API Management resource and select it. Then copy the `Gateway URL` found in the **Overview** panel of your API Management.
 
@@ -1030,7 +1030,7 @@ The following sequence diagram illustrates how `history-func` gets data updates 
 
 ### Inspecting product views' stream
 
-First thing first, let's take a look at the Streams currently available on your Azure Cache for Redis instance.
+First thing first, let's take a look at the Streams currently available on your Azure Managed Redis instance.
 
 The goal is to locate the [Redis Stream][redis-streams] in which the `catalog-api` is adding new items whenever a user views a product. Afterwards you need to inspect that stream and take a look at the events/items added to it.
 
@@ -1057,9 +1057,9 @@ To do this, there is a variety of tools that you can use to inspect Redis data l
 <details>
 <summary>📚 Toggle solution</summary>
 
-Open the [Redis Console][redis-console] of your Azure Cache for Redis instance.
+Open the [Redis Console][redis-console] of your Azure Managed Redis instance.
 
-![Azure Cache for Redis Console](./assets/azure-cache-for-redis-console.png)
+![Azure Managed Redis Console](./assets/azure-cache-for-redis-console.png)
 
 Then use the [SCAN command][redis-scan-command] to list all keys having a type `stream`:
 
@@ -1158,7 +1158,7 @@ cp local.settings.json.template local.settings.json
 
 Then you need to update the value of `AZURE_REDIS_CONNECTION_STRING` that you can retreive in your redis instance:
 
-![Azure Cache for Redis connection string][azure-cache-for-redis-connection-string]
+![Azure Managed Redis connection string][azure-cache-for-redis-connection-string]
 
 Now that you have the required config, you can run the function:
 
@@ -1290,19 +1290,19 @@ Once it gets loaded, click on the UUID of the user on the top right of the page 
 
 ---
 
-# Lab 5 : Azure Cache for Redis Governance 
+# Lab 5 : Azure Managed Redis Governance 
 
-In this lab you will discover how to retrieve metrics and logs from Azure Cache for Redis to monitor the health of your instance and take informed decisions about its sizing.
+In this lab you will discover how to retrieve metrics and logs from Azure Managed Redis to monitor the health of your instance and take informed decisions about its sizing.
 
 ## Azure Monitor 
 
-To simulate a real world scenario, the first thing to do is to generate some load on the Azure Cache for Redis resource. To be able to do this, you will use the [RedisLabs/memtier_benchmark][redis-benchmark] tool as a docker image (Docker is already set up in the devcontainer/codespace).
+To simulate a real world scenario, the first thing to do is to generate some load on the Azure Managed Redis resource. To be able to do this, you will use the [RedisLabs/memtier_benchmark][redis-benchmark] tool as a docker image (Docker is already set up in the devcontainer/codespace).
 
 RedisLabs Memtier_benchmark is a command-line utility designed to load test based on a default or custom load scenario. 
 
-To authenticate to your Azure Cache for Redis resource you will need one of the access keys. Go to the your Azure Cache for Redis resource and select the **Access Keys** panel, then copy the  `Primary` or `Secondary` key. 
+To authenticate to your Azure Managed Redis resource you will need one of the access keys. Go to the your Azure Managed Redis resource and select the **Access Keys** panel, then copy the  `Primary` or `Secondary` key. 
 
-Next, to generate some load on the Azure Cache for Redis resource use the following command : 
+Next, to generate some load on the Azure Managed Redis resource use the following command : 
 
 ```bash
 docker run --rm redislabs/memtier_benchmark:latest -h <YOUR_REDIS_RESOURCE_NAME>.redis.cache.windows.net -p 6380 -a <YOUR_REDIS_ACCESS_KEY> --tls --tls-skip-verify
@@ -1314,7 +1314,7 @@ When the benchmark is done, you should see the following results table (latency 
 
 ![Redis-Benchmark-results](./assets/redis-benchmark-results.png)
 
-About 5 minutes after the benchmark has successfully ended, open the Azure Portal view on your Azure Cache for Redis resource and open the **Insights** panel to gain deeper knowledge of the resource health : 
+About 5 minutes after the benchmark has successfully ended, open the Azure Portal view on your Azure Managed Redis resource and open the **Insights** panel to gain deeper knowledge of the resource health : 
 
 ![Redis-Insights-Overview](./assets/redis-insights-overview.png)
 
@@ -1322,15 +1322,15 @@ And then inside the **Performance** tab you can check how the resource performed
 
 ![Redis-Insights-Performance](./assets/redis-insights-performance.png)
 
-These metrics are available out of the box, with any Azure Cache for Redis SKU and are precious insights to take informed decisions concerning the sizing of your caching resource.
+These metrics are available out of the box, with any Azure Managed Redis SKU and are precious insights to take informed decisions concerning the sizing of your caching resource.
 
-The Azure Cache for Redis Enterprise SKU also comes with `autoscaling` capabilities to guarantee necessary caching resources at all times. 
+The Azure Managed Redis Enterprise SKU also comes with `autoscaling` capabilities to guarantee necessary caching resources at all times. 
 
 Currently, only the Enterprise SKU support the `autoscaling` feature. However, you can do it manually using the `Premium` SKU, enabling the `cluster` option and taking advantage of Azure Monitor Alerts to respond to increasing usage trends and trigger additional node and shard provisionning. 
 
 ## Usage trend monitoring
 
-Let's create an [alert rule][alert-rule-creation] with Azure Monitor to send an email notification when the CPU average usage of the Azure Cache for Redis resource is above `30%` for more than `1` minute. When the alert is triggered, you will send an email to notify the Ops team that the usage trend on Redis increased.
+Let's create an [alert rule][alert-rule-creation] with Azure Monitor to send an email notification when the CPU average usage of the Azure Managed Redis resource is above `30%` for more than `1` minute. When the alert is triggered, you will send an email to notify the Ops team that the usage trend on Redis increased.
 
 In a real world scenario this alert could be coupled with a request to increase the number of nodes in the cluster to help you respond to usage increase, as well as scale down rule to reduce the number of nodes when demand drops. For simplicity and to avoid scaling delay for the lab, we'll limit to a simple email notification here.
 
@@ -1339,7 +1339,7 @@ In a real world scenario this alert could be coupled with a request to increase 
 > - Create a `static alert rule` to trigger when CPU reaches `30%` on `average` for the past `1` minute
 > - Create an [`action group`][action-group-creation] that will be executed by this alert rule 
 > - The `action group` must send an `email` notification to your email address 
-> - Execute the memtier_benchmark utility during `5 minutes` to load the Azure Cache for Redis CPU and trigger the alert
+> - Execute the memtier_benchmark utility during `5 minutes` to load the Azure Managed Redis CPU and trigger the alert
 
 </div>
 
@@ -1347,7 +1347,7 @@ In a real world scenario this alert could be coupled with a request to increase 
 
 <summary>📚 Toggle solution</summary>
 
-To do so, open the Azure Portal on your Azure Cache for Redis resource and open the **Metrics** panel.
+To do so, open the Azure Portal on your Azure Managed Redis resource and open the **Metrics** panel.
 
 In the **Metric** dropdown, select `CPU` and set **Aggregation** to `Avg` and click on **New alert rule** :
 
@@ -1374,7 +1374,7 @@ Now is time to finalize the configuration of the alert rule: Giving it a `resour
 
 ![monitor-alert-details](./assets/monitor-alert-details.png)
 
-Now the alert is created, you can test it by generating some load on the Azure Cache for Redis resource using the [RedisLabs/memtier_benchmark][redis-benchmark] tool like you did before.
+Now the alert is created, you can test it by generating some load on the Azure Managed Redis resource using the [RedisLabs/memtier_benchmark][redis-benchmark] tool like you did before.
 
 Run the same **redis-benchmark** command from your devcontainer/copdespace terminal as earlier, for a 5 minutes benchmark duration :
 
@@ -1386,7 +1386,7 @@ After a few minutes, a notification like the following should be sent to your em
 
 ![monitor-alert-email](./assets/monitor-alert-email.png)
 
-After the benchmark ended, you will be able to check the trigger history by clicking **Alerts** and then **Alert Rules** in the Azure Cache for Redis resource and select the Alert Rule you built in this lab, and open the **history** panel where you should see the alert trigger details  :
+After the benchmark ended, you will be able to check the trigger history by clicking **Alerts** and then **Alert Rules** in the Azure Managed Redis resource and select the Alert Rule you built in this lab, and open the **history** panel where you should see the alert trigger details  :
 
 ![monitor-alerts-select](./assets/monitor-alerts-select.png)
 ![monitor-alert-rules](./assets/monitor-alert-rules.png)
@@ -1407,17 +1407,17 @@ As a side note, we really encourage you to take the time to dig in the toolbox o
 
 # Lab 6 : Integration with Microsoft Entra ID
 
-In this Lab you will focus on securing connections to Azure Cache for Redis by replacing secrets (e.g. connection strings) with [ Azure Active Directory integration and RBAC][redis-aad-auth]. Notice that the new name for Azure Active Directory is Microsoft Entra ID.
+In this Lab you will focus on securing connections to Azure Managed Redis by replacing secrets (e.g. connection strings) with [ Azure Active Directory integration and RBAC][redis-aad-auth]. Notice that the new name for Azure Active Directory is Microsoft Entra ID.
 
-![Using AAD to connect to Azure Cache for Redis](./assets/azure-ad-token.png)
+![Using AAD to connect to Azure Managed Redis](./assets/azure-ad-token.png)
 
 Here are the steps for securing your application with Microsoft Entra ID (new name for Azure Active Directory (AAD)) and Role Based Access Control (RBAC):
-- You enable the AAD-integration in your Azure Cache for Redis resource.
+- You enable the AAD-integration in your Azure Managed Redis resource.
 - You assign a role to your application's identity (e.g. System assigned identity) to allow it to access data in Redis.
 - Your application requests a token from Azure Active Directory. This can be done automatically using a Redis client library (if it supports AAD-integration) otherwise you need to use an authentication library like [Microsoft Authentication Library][msal] (also known as MSAL) to get a token.
-- The application then uses that token as a password to establish a connection to Azure Cache for Redis.
+- The application then uses that token as a password to establish a connection to Azure Managed Redis.
 - The application uses the connection to communicate with Redis.
-- Before the expiry of the AAD token, your application needs to refresh the token (e.g. via [MSAL][msal]) to avoid losing access to the Azure Cache for Redis instance.
+- Before the expiry of the AAD token, your application needs to refresh the token (e.g. via [MSAL][msal]) to avoid losing access to the Azure Managed Redis instance.
 
 The goal of this lab is to update `catalog-api` to use AAD and RBAC instead of a Connection String.
 `catalog-api` is already using [Microsoft.Azure.StackExchangeRedis][microsoft-azure-stackexchangeredis] which extends the Redis client [StackExchange.Redis][stackexchange-redis] to support AAD-integration.
@@ -1426,7 +1426,7 @@ The goal of this lab is to update `catalog-api` to use AAD and RBAC instead of a
 
 <div class="task" data-title="Task">
 
-> Enable `Azure Active Directory access authorization` on your Azure Cache for Redis resource from the `Authentication` menu
+> Enable `Azure Active Directory access authorization` on your Azure Managed Redis resource from the `Authentication` menu
 
 </div>
 
@@ -1483,7 +1483,7 @@ Finally click on `Review + assign` to crate the new Redis user:
 
 ## Updating catalog-api to use the AAD-integration
 
-So far, you were using a Connection String to connect to the Azure Cache for Redis resource.
+So far, you were using a Connection String to connect to the Azure Managed Redis resource.
 
 Connections are currently established using the following code:
 
@@ -1535,7 +1535,7 @@ Validate the change by clicking **Ok**, then **Save** and you should be all set 
 
 <div class="task" data-title="Task">
 
-> Use the Web App to view some products and ensure `catalog-api` can still use your Azure Cache for Redis instance
+> Use the Web App to view some products and ensure `catalog-api` can still use your Azure Managed Redis instance
 
 </div>
 
@@ -1559,8 +1559,8 @@ Open the Static Web App and make sure you can still see a list of products:
 
 # Closing the workshop
 
-The **Product Hands on Lab : Azure Cache for Redis in Azure World** comes to an end : We hope you liked practicing with Azure solutions and that this lab will help you kick start your journey to caching in Azure. 
-Most of the solution that were quickly presented as a cloud native application integrated with Azure Cache for Redis have their dedicated lab to help you practice in depth way with these products. 
+The **Product Hands on Lab : Azure Managed Redis in Azure World** comes to an end : We hope you liked practicing with Azure solutions and that this lab will help you kick start your journey to caching in Azure. 
+Most of the solution that were quickly presented as a cloud native application integrated with Azure Managed Redis have their dedicated lab to help you practice in depth way with these products. 
 You can find dedicated labs here : 
 - [Product Hands-on lab : Azure Serverless Architecture][hol-serverless]
 - [Product Hands-on lab : API Management][hol-apim]

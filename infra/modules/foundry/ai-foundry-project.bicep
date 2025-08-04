@@ -1,6 +1,6 @@
 param aiFoundryName string
 param aiProjectName string
-param location string = 'eastus2'
+param location string = resourceGroup().location
 
 resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' existing = {
   name: aiFoundryName

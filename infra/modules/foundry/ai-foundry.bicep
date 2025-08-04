@@ -1,5 +1,5 @@
 param aiFoundryName string
-param location string = 'eastus2'
+param location string = resourceGroup().location
 
 resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = {
   name: aiFoundryName
@@ -19,6 +19,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = {
     customSubDomainName: aiFoundryName
 
     disableLocalAuth: true
+    publicNetworkAccess: 'Enabled'
   }
 }
 

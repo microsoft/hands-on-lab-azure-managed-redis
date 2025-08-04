@@ -54,6 +54,7 @@ module logAnalytics './modules/monitor/log.bicep' = {
   scope: resourceGroup
   params: {
     name: 'log-${resourceSuffixKebabcase}'
+    location: location
     tags: tags
   }
 }
@@ -63,6 +64,7 @@ module loadTesting './modules/testing/load-testing.bicep' = {
   scope: resourceGroup
   params: {
     name: 'lt-${resourceSuffixKebabcase}'
+    location: location
     tags: tags
   }
 }
@@ -72,6 +74,7 @@ module apim './modules/apis/apim.bicep' = {
   scope: resourceGroup
   params: {
     name: 'apim-${resourceSuffixKebabcase}'
+    location: location
     tags: tags
   }
 }
@@ -81,6 +84,7 @@ module cosmosDb './modules/storage/cosmos-db.bicep' = {
   scope: resourceGroup
   params: {
     name: 'cosmos-${resourceSuffixKebabcase}'
+    location: location
     tags: tags
   }
 }
@@ -107,6 +111,7 @@ module applicationInsights './modules/monitor/application-insights.bicep' = {
   scope: resourceGroup
   params: {
     name: 'appi-${resourceSuffixKebabcase}'
+    location: location
     tags: tags
     logAnalyticsWorkspaceId: logAnalytics.outputs.id
   }
@@ -119,6 +124,7 @@ module cacheFunction './modules/host/function.bicep' = {
   params: {
     planName: 'asp-cache-${resourceSuffixKebabcase}'
     appName: 'func-cache-${resourceSuffixKebabcase}'
+    location: location
     applicationInsightsName: applicationInsights.outputs.name
     storageAccountName: storageAccountFunctions.outputs.name
     deploymentStorageContainerName: cacheDeploymentPackageContainerName
@@ -143,6 +149,7 @@ module historyFunction './modules/host/function.bicep' = {
   params: {
     planName: 'asp-hist-${resourceSuffixKebabcase}'
     appName: 'func-hist-${resourceSuffixKebabcase}'
+    location: location
     applicationInsightsName: applicationInsights.outputs.name
     storageAccountName: storageAccountFunctions.outputs.name
     deploymentStorageContainerName: historyDeploymentPackageContainerName
@@ -162,6 +169,7 @@ module aiFoundry './modules/foundry/ai-foundry.bicep' = {
   scope: resourceGroup
   params: {
     aiFoundryName: 'ais-${resourceSuffixKebabcase}'
+    location: location
   }
 }
 
@@ -171,6 +179,7 @@ module aiFoundryProject './modules/foundry/ai-foundry-project.bicep' = {
   params: {
     aiFoundryName: aiFoundry.outputs.name
     aiProjectName: 'prj-${resourceSuffixKebabcase}'
+    location: location
   }
 }
 
@@ -194,7 +203,66 @@ module embeddingsDeploymentModel './modules/foundry/ai-foundry-model.bicep' = {
     modelCapacity : 100
     modelVersion: '2'
   }
+  dependsOn:[chatDeploymentModel]
 }
 
+module appServicePlan './modules/host/appserviceplan.bicep' = {
+  name: 'appServicePlan'
+  scope: resourceGroup
+  params: {
+    name: 'asp-${resourceSuffixKebabcase}'
+    location: location
+    kind: 'Linux'
+    sku: {
+        name: 'S1'
+        tier: 'Standard'
+        size: 'S1'
+        family: '1'
+        capacity: 1
+    }
+    tags: tags
+  }
+}
+
+// Catalog API
+module appService './modules/host/appservice.bicep' = {
+  name: 'appService'
+  scope: resourceGroup
+  params: {
+    name: 'app-${resourceSuffixKebabcase}'
+    location: location
+    tags: tags
+    applicationInsightsName: applicationInsights.outputs.name
+    appServicePlanId: appServicePlan.outputs.id
+    runtimeName: 'dotnet-isolated'
+    runtimeVersion: '8.0'
+    managedIdentity: true
+  }
+}
+
+module managedRedis './modules/storage/managed-redis.bicep' = {
+  name: 'managedRedis'
+  scope: resourceGroup
+  params: {
+    name: 'redis-${resourceSuffixKebabcase}'
+    location: location
+    tags: tags
+  }
+}
+
+module roles './modules/security/roles.bicep' = {
+  name: 'roles'
+  scope: resourceGroup
+  params: {
+    cosmosDbAccountName: cosmosDb.outputs.name
+    managedRedisDatabaseName: managedRedis.outputs.databaseResourceName
+    historyFunctionPrincipalId: historyFunction.outputs.principalId
+    cacheFunctionPrincipalId: cacheFunction.outputs.principalId
+    appServicePrincipalId: appService.outputs.identityPrincipalId
+  }
+}
 
 output RESOURCE_GROUP string = resourceGroup.name
+output APP_SERVICE_URI string = appService.outputs.uri
+output AZURE_LOCATION string = location
+output AZURE_TENANT_ID string = tenant().tenantId

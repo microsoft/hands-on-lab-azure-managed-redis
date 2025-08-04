@@ -155,51 +155,21 @@ az provider register --namespace 'Microsoft.DocumentDB'
 
 ## Setting up the infrastructure in Azure
 
-If you look at the project, you will see a `terraform` folder. It contains the infrastructure as code that you will use to deploy the infrastructure for this Hands On Lab. This will deploy a series of Azure services that you will use in combination with Azure Managed Redis.
 
-We need to specify the subscription we want to use:
 
+If you look at the project, you will see an `infra` folder. It contains the infrastructure as code that you will use to deploy the infrastructure for this Hands On Lab. This will deploy a series of Azure services that you will use in combination with Azure Managed Redis.
+
+You will deploy it using Azure Developer CLI (azd):
+
+First, init the environment:
 ```bash
-# For bash
-export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+azd init -l eastus2 -e dev
 ```
 
-```powershell
-# For powershell
-$ARM_SUBSCRIPTION_ID = (az account show --query id -o tsv)
-```
-
-In a terminal run the following command to initialize terraform:
+Next, provision the resources and the code source of the lab:
 
 ```bash
-cd terraform && terraform init
-```
-
-You can deploy the infrastructure in a specific resource group in your subscription or in a new one:
-
-Option 1 : To deploy the infrastructure to a specific resource group, run the following commands:
-
-```bash
-# Run plan to see the resources that will be created
-terraform plan \
-    -var "resource_group_name=YOUR_RESOURCE_GROUP_NAME" \
-    -out plan.out
-
-# Optional : You can take advantage of other variables to configure your deployment.
-# Make sure to separate each new variable with a whitespace
-    -var "location=eastus" \        #default : westeurope
-    -var "environment=***" \        #default : dev
-    -var "domain=***" \             #default : rds
-    -var "tags={tag1='value'}" \    #default : {}
-
-# Apply the plan
-terraform apply plan.out
-```
-
-Option 2 : To deploy the infrastructure to a new resource group, run the following command:
-
-```bash
-terraform apply -auto-approve
+azd up
 ```
 
 <div class="warning" data-title="Warning">

@@ -1377,6 +1377,8 @@ As a side note, we really encourage you to take the time to dig in the toolbox o
 
 # Lab 6 : Integration with Microsoft Entra ID
 
+## TODO: review the contents of this Lab as we cannot/should not connect using Connection strings anymore!!
+
 In this Lab you will focus on securing connections to Azure Managed Redis by replacing secrets (e.g. connection strings) with [ Azure Active Directory integration and RBAC][redis-aad-auth]. Notice that the new name for Azure Active Directory is Microsoft Entra ID.
 
 ![Using AAD to connect to Azure Managed Redis](./assets/azure-ad-token.png)

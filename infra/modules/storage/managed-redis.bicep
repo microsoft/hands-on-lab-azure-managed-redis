@@ -2,6 +2,7 @@ param name string
 param location string = resourceGroup().location
 param skuName string = 'Balanced_B0'
 param tags object = {}
+param redisPort int = 10000
 
 resource managedRedisEnterprise 'Microsoft.Cache/redisEnterprise@2025-05-01-preview' = {
   name: name
@@ -24,7 +25,7 @@ resource managedRedisEnterpriseDatabase 'Microsoft.Cache/redisEnterprise/databas
   name: 'default'
   properties: {
     clientProtocol: 'Encrypted'
-    port: 10000
+    port: redisPort
     clusteringPolicy: 'EnterpriseCluster'
     evictionPolicy: 'NoEviction'
     modules: [
@@ -54,3 +55,4 @@ output id string = managedRedisEnterprise.id
 output name string = managedRedisEnterprise.name
 output databaseName string = managedRedisEnterpriseDatabase.name
 output databaseResourceName string = '${managedRedisEnterprise.name}/${managedRedisEnterpriseDatabase.name}'
+output endpoint string = '${managedRedisEnterprise.properties.hostName}:${redisPort}'

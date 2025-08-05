@@ -3,6 +3,10 @@ param managedRedisDatabaseName string
 param historyFunctionPrincipalId string
 param cacheFunctionPrincipalId string
 param appServicePrincipalId string
+param appInsightsName string
+
+// https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/monitor#monitoring-metrics-publisher
+var metricsPublisherRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '3913510d-42f4-4e42-8a64-420c390055eb')
 
 resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' existing = {
   name: cosmosDbAccountName
@@ -65,4 +69,50 @@ resource cacheFunctionRedisEnterpriseDefaultRole 'Microsoft.Cache/redisEnterpris
     }
   }
   dependsOn: [managedRedisDatabase]
+}
+
+resource catalogApiRedisEnterpriseDefaultRole 'Microsoft.Cache/redisEnterprise/databases/accessPolicyAssignments@2025-05-01-preview' = {
+  parent: managedRedisDatabase
+  name: appServicePrincipalId
+  properties: {
+    accessPolicyName: 'default'
+    user: {
+      objectId: appServicePrincipalId
+    }
+  }
+  dependsOn: [managedRedisDatabase]
+}
+
+resource appInsights 'Microsoft.Insights/components@2020-02-02' existing = {
+  name: appInsightsName
+}
+
+resource monitoringMetricsPublisherFuncStdAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  name: guid(appInsights.id, appServicePrincipalId, metricsPublisherRoleId)
+  scope: appInsights
+  properties: {
+    roleDefinitionId: metricsPublisherRoleId
+    principalId: appServicePrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource monitoringMetricsPublisherHistoryFunctionAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  name: guid(appInsights.id, historyFunctionPrincipalId, metricsPublisherRoleId)
+  scope: appInsights
+  properties: {
+    roleDefinitionId: metricsPublisherRoleId
+    principalId: historyFunctionPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource monitoringMetricsPublisherCacheFunctionAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  name: guid(appInsights.id, cacheFunctionPrincipalId, metricsPublisherRoleId)
+  scope: appInsights
+  properties: {
+    roleDefinitionId: metricsPublisherRoleId
+    principalId: cacheFunctionPrincipalId
+    principalType: 'ServicePrincipal'
+  }
 }

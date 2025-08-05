@@ -1,3 +1,4 @@
+using Azure.Identity;
 using Microsoft.Azure.StackExchangeRedis;
 using StackExchange.Redis;
 
@@ -10,10 +11,7 @@ public interface IRedisService {
 public class RedisService : IRedisService
 { 
     private IDatabase? _database = null;
-    private readonly string? _connectionString;
-    private readonly string? _managedIdentityPrincipalId;
-    private readonly string? _hostname;
-    private readonly string? _port;
+    private readonly string? _endpoint;
 
     private readonly int _defaultTTLInSeconds = 60;
     private readonly TimeSpan _ttl; // Time To Live
@@ -21,10 +19,7 @@ public class RedisService : IRedisService
     public RedisService(IConfiguration configuration)
     {
         _ttl = TTL(configuration["AZURE_REDIS_TTL_IN_SECONDS"]);
-        _connectionString = configuration["AZURE_REDIS_CONNECTION_STRING"];
-        _managedIdentityPrincipalId = configuration["AZURE_MANAGED_IDENTITY_PRINCIPAL_ID"];
-        _port = configuration["AZURE_REDIS_PORT"];
-        _hostname = configuration["AZURE_REDIS_HOSTNAME"];
+        _endpoint = configuration["AZURE_REDIS_ENDPOINT"];
     }
 
     private async Task<IDatabase> GetDatabaseAsync() {
@@ -34,8 +29,7 @@ public class RedisService : IRedisService
 
         Console.WriteLine("Initializing Redis database connection");
 
-        // var connectionMultiplexer = await ConnectionMultiplexer.ConnectAsync(_connectionString!, AzureCacheForRedis.ConfigureForAzure);
-        var configurationOptions = await ConfigurationOptions.Parse($"{_hostname}:{_port}").ConfigureForAzureWithSystemAssignedManagedIdentityAsync(_managedIdentityPrincipalId!);
+        var configurationOptions = await ConfigurationOptions.Parse(_endpoint).ConfigureForAzureWithTokenCredentialAsync(new DefaultAzureCredential());
         var connectionMultiplexer = await ConnectionMultiplexer.ConnectAsync(configurationOptions);
 
         _database = connectionMultiplexer.GetDatabase();

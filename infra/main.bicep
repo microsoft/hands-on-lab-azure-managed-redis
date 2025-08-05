@@ -234,9 +234,17 @@ module appService './modules/host/appservice.bicep' = {
     tags: union(tags, { 'azd-service-name': 'catalog-api' })
     applicationInsightsName: applicationInsights.outputs.name
     appServicePlanId: appServicePlan.outputs.id
-    runtimeName: 'dotnet-isolated'
+    runtimeName: 'dotnetcore'
     runtimeVersion: '8.0'
     managedIdentity: true
+    appSettings: {
+      AZURE_COSMOS_ENDPOINT: cosmosDb.outputs.endpoint
+      AZURE_COSMOS_DATABASE: 'catalogdb'
+      AZURE_REDIS_ENDPOINT: managedRedis.outputs.endpoint
+      PRODUCT_LIST_CACHE_DISABLE: '0'
+      SIMULATED_DB_LATENCY_IN_SECONDS: '2'
+      PRODUCT_VIEWS_STREAM_NAME: 'productViews'
+    }
   }
 }
 
@@ -259,6 +267,7 @@ module roles './modules/security/roles.bicep' = {
     historyFunctionPrincipalId: historyFunction.outputs.principalId
     cacheFunctionPrincipalId: cacheFunction.outputs.principalId
     appServicePrincipalId: appService.outputs.identityPrincipalId
+    appInsightsName: applicationInsights.outputs.name
   }
 }
 

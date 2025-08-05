@@ -1,3 +1,4 @@
+using Azure.Identity;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Linq;
 
@@ -16,7 +17,8 @@ public class CosmosService : ICosmosService
     public CosmosService(IConfiguration configuration, ISimulatedDatabaseLatency simulatedDatabaseLatency)
     {
         _cosmosClient = new CosmosClient(
-            connectionString: configuration["AZURE_COSMOS_CONNECTION_STRING"]!
+            accountEndpoint: configuration["AZURE_COSMOS_ENDPOINT"]!,
+            tokenCredential: new DefaultAzureCredential()
         );
         _simulatedDatabaseLatency = simulatedDatabaseLatency;
         _databaseName = configuration["AZURE_COSMOS_DATABASE"]!;

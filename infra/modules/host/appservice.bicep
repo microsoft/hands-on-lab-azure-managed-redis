@@ -11,7 +11,7 @@ param managedIdentity bool = !empty(keyVaultName)
 
 // Runtime Properties
 @allowed([
-  'dotnet', 'dotnetcore', 'dotnet-isolated', 'node', 'python', 'java', 'powershell', 'custom'
+  'dotnet', 'dotnetcore', 'node', 'python', 'java'
 ])
 param runtimeName string
 param runtimeNameAndVersion string = '${runtimeName}|${runtimeVersion}'
@@ -94,7 +94,10 @@ module configAppSettings 'appservice-appsettings.bicep' = {
         ENABLE_ORYX_BUILD: string(enableOryxBuild)
       },
       runtimeName == 'python' && appCommandLine == '' ? { PYTHON_ENABLE_GUNICORN_MULTIWORKERS: 'true'} : {},
-      !empty(applicationInsightsName) ? { APPLICATIONINSIGHTS_CONNECTION_STRING: applicationInsights.?properties.?ConnectionString } : {},
+      !empty(applicationInsightsName) ? {
+        APPLICATIONINSIGHTS_CONNECTION_STRING: applicationInsights.?properties.?ConnectionString
+        APPINSIGHTS_INSTRUMENTATIONKEY: applicationInsights.?properties.?InstrumentationKey
+      } : {},
       !empty(keyVaultName) ? { AZURE_KEY_VAULT_ENDPOINT: keyVault.?properties.?vaultUri } : {})
   }
 }

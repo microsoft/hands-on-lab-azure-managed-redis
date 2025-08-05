@@ -1,6 +1,8 @@
 param cosmosDbAccountName string
 param managedRedisDatabaseName string
+param historyFunctionUamiPrincipalId string
 param historyFunctionPrincipalId string
+param cacheFunctionUamiPrincipalId string
 param cacheFunctionPrincipalId string
 param appServicePrincipalId string
 param appInsightsName string
@@ -48,6 +50,18 @@ resource managedRedisDatabase 'Microsoft.Cache/redisEnterprise/databases@2025-05
   name: managedRedisDatabaseName
 }
 
+resource historyFunctionUAMIRedisEnterpriseDefaultRole 'Microsoft.Cache/redisEnterprise/databases/accessPolicyAssignments@2025-05-01-preview' = {
+  parent: managedRedisDatabase
+  name: historyFunctionUamiPrincipalId
+  properties: {
+    accessPolicyName: 'default'
+    user: {
+      objectId: historyFunctionUamiPrincipalId
+    }
+  }
+}
+
+// TODO: should we refactor the code and just keep a single identity per function to access AMR ?
 resource historyFunctionRedisEnterpriseDefaultRole 'Microsoft.Cache/redisEnterprise/databases/accessPolicyAssignments@2025-05-01-preview' = {
   parent: managedRedisDatabase
   name: historyFunctionPrincipalId
@@ -61,11 +75,11 @@ resource historyFunctionRedisEnterpriseDefaultRole 'Microsoft.Cache/redisEnterpr
 
 resource cacheFunctionRedisEnterpriseDefaultRole 'Microsoft.Cache/redisEnterprise/databases/accessPolicyAssignments@2025-05-01-preview' = {
   parent: managedRedisDatabase
-  name: cacheFunctionPrincipalId
+  name: cacheFunctionUamiPrincipalId
   properties: {
     accessPolicyName: 'default'
     user: {
-      objectId: cacheFunctionPrincipalId
+      objectId: cacheFunctionUamiPrincipalId
     }
   }
   dependsOn: [managedRedisDatabase]

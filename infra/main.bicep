@@ -117,6 +117,15 @@ module applicationInsights './modules/monitor/application-insights.bicep' = {
   }
 }
 
+module cacheFunctionIdentity './modules/security/uami.bicep' = {
+  name: 'cacheFunctionIdentity'
+  scope: resourceGroup
+  params: {
+    name: 'uami-cache-${resourceSuffixKebabcase}'
+    location: location
+    tags: tags
+  }
+}
 
 module cacheFunction './modules/host/function.bicep' = {
   name: 'cacheFunction'
@@ -126,20 +135,47 @@ module cacheFunction './modules/host/function.bicep' = {
     appName: 'func-cache-${resourceSuffixKebabcase}'
     location: location
     applicationInsightsName: applicationInsights.outputs.name
+    userAssignedIdentityId: cacheFunctionIdentity.outputs.id
     storageAccountName: storageAccountFunctions.outputs.name
     deploymentStorageContainerName: cacheDeploymentPackageContainerName
     azdServiceName: 'cache-refresh'
     tags: tags
     appSettings: [
       {
-        name  : 'REDIS_PRODUCT_ALL'
+        name  : 'REDIS_KEY_PRODUCTS_ALL'
         value : 'products:all'
+      }
+      {
+        name  : 'AZURE_REDIS_TTL_IN_SECONDS'
+        value : '60'
       }
       {
         name  : 'CATALOG_API_URL'
         value : apim.outputs.gatewayUrl
       }
+      {
+        name  : 'AZURE_REDIS_CONNECTION__redisHostName'
+        value : managedRedis.outputs.hostName
+      }
+      {
+        name  : 'AZURE_REDIS_CONNECTION__principalId'
+        value : cacheFunctionIdentity.outputs.principalId
+      }
+      {
+        name  : 'AZURE_REDIS_CONNECTION__clientId'
+        value : cacheFunctionIdentity.outputs.clientId
+      }
     ]
+  }
+}
+
+module historyFunctionIdentity './modules/security/uami.bicep' = {
+  name: 'historyFunctionIdentity'
+  scope: resourceGroup
+  params: {
+    name: 'uami-hist-${resourceSuffixKebabcase}'
+    location: location
+    tags: tags
   }
 }
 
@@ -159,6 +195,22 @@ module historyFunction './modules/host/function.bicep' = {
       {
         name  : 'PRODUCT_VIEWS_STREAM_NAME'
         value : 'productViews'
+      }
+      {
+        name  : 'AZURE_REDIS_CONNECTION__redisHostName'
+        value : managedRedis.outputs.hostName
+      }
+      {
+        name  : 'AZURE_REDIS_CONNECTION__principalId'
+        value : historyFunctionIdentity.outputs.principalId
+      }
+      {
+        name  : 'AZURE_REDIS_CONNECTION__clientId'
+        value : historyFunctionIdentity.outputs.clientId
+      }
+      {
+        name  : 'AZURE_REDIS_ENDPOINT'
+        value : managedRedis.outputs.endpoint
       }
     ]
   }
@@ -264,7 +316,9 @@ module roles './modules/security/roles.bicep' = {
   params: {
     cosmosDbAccountName: cosmosDb.outputs.name
     managedRedisDatabaseName: managedRedis.outputs.databaseResourceName
+    historyFunctionUamiPrincipalId: historyFunctionIdentity.outputs.principalId
     historyFunctionPrincipalId: historyFunction.outputs.principalId
+    cacheFunctionUamiPrincipalId: cacheFunctionIdentity.outputs.principalId
     cacheFunctionPrincipalId: cacheFunction.outputs.principalId
     appServicePrincipalId: appService.outputs.identityPrincipalId
     appInsightsName: applicationInsights.outputs.name

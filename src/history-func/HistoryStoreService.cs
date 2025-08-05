@@ -1,7 +1,8 @@
 using System;
 using System.Text.Json;
-using StackExchange.Redis;
+using Azure.Identity;
 using Microsoft.Azure.StackExchangeRedis;
+using StackExchange.Redis;
 
 namespace History.Api
 {
@@ -12,14 +13,25 @@ namespace History.Api
 
     public class HistoryStoreService : IHistoryStoreService
     { 
-        private readonly IDatabase _database;
+        private IDatabase? _database = null;
         private readonly int _maxListSize = 10;
-        private readonly string redisConnectionString = Environment.GetEnvironmentVariable("AZURE_REDIS_CONNECTION_STRING");
+        private readonly string _redisEndpoint = Environment.GetEnvironmentVariable("AZURE_REDIS_ENDPOINT");
 
-        public HistoryStoreService()
-        {
-            var connectionMultiplexer = ConnectionMultiplexer.Connect(redisConnectionString, AzureCacheForRedis.ConfigureForAzure);
+        private async Task<IDatabase> GetDatabaseAsync() {
+            if (_database != null) {
+                return _database;
+            }
+
+            Console.WriteLine("Initializing Redis database connection");
+
+            var configurationOptions = await ConfigurationOptions.Parse(_redisEndpoint).ConfigureForAzureWithTokenCredentialAsync(new DefaultAzureCredential());
+            var connectionMultiplexer = await ConnectionMultiplexer.ConnectAsync(configurationOptions);
+
             _database = connectionMultiplexer.GetDatabase();
+
+            Console.WriteLine("Redis database connection established");
+
+            return _database;
         }
 
         private string UserHistoryKey(string userId) => $"history:{userId}";
@@ -27,7 +39,8 @@ namespace History.Api
         public async Task<IEnumerable<ProductView>> GetHistory(string userId)
         {
             string key = UserHistoryKey(userId);
-            var list = await _database.ListRangeAsync(key, 0, -1);
+            var database = await GetDatabaseAsync();
+            var list = await database.ListRangeAsync(key, 0, -1);
 
             if (list == null) {
                 return Enumerable.Empty<ProductView>();
@@ -41,9 +54,10 @@ namespace History.Api
         {
             string key = UserHistoryKey(userId);
             string productViewJson = JsonSerializer.Serialize<ProductView>(productView);
+            var database = await GetDatabaseAsync();
 
-            await _database.ListLeftPushAsync(key, productViewJson);
-            await _database.ListTrimAsync(key, 0, _maxListSize - 1);
+            await database.ListLeftPushAsync(key, productViewJson);
+            await database.ListTrimAsync(key, 0, _maxListSize - 1);
         }
     }
 }

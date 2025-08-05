@@ -11,6 +11,7 @@ param maximumInstanceCount int = 100
 param instanceMemoryMB int = 2048
 param appSettings array = []
 param azdServiceName string
+param userAssignedIdentityId string = ''
 
 resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' existing = {
   name: storageAccountName
@@ -39,8 +40,13 @@ resource flexFuncApp 'Microsoft.Web/sites@2023-12-01' = {
   location: location
   tags: union(tags, { 'azd-service-name': azdServiceName })
   kind: 'functionapp,linux'
-  identity: {
+  identity: empty(userAssignedIdentityId) ? {
     type: 'SystemAssigned'
+  } : {
+    type: 'SystemAssigned, UserAssigned'
+    userAssignedIdentities: {
+      '${userAssignedIdentityId}': {}
+    }
   }
   properties: {
     serverFarmId: flexFuncPlan.id

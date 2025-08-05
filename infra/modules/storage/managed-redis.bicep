@@ -56,3 +56,4 @@ output name string = managedRedisEnterprise.name
 output databaseName string = managedRedisEnterpriseDatabase.name
 output databaseResourceName string = '${managedRedisEnterprise.name}/${managedRedisEnterpriseDatabase.name}'
 output endpoint string = '${managedRedisEnterprise.properties.hostName}:${redisPort}'
+output hostName string = managedRedisEnterprise.properties.hostName

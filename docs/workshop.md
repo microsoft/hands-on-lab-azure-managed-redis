@@ -402,7 +402,7 @@ Inside the Azure Portal, go to your resource group, search for the Azure Cosmos 
 
 ![Cosmos DB Keys](./assets/cosmos-db-keys.png)
 
-Then inside the Azure Portal, go to your resource group, search the Azure Managed Redis, select it and in the left menu, click on **Access keys**. Then copy the **Primary Connection String** and replace `"AZURE_REDIS_CONNECTION_STRING"` value in the `appsettings.Development.json` file :
+Then inside the Azure Portal, go to your resource group, search the Azure Managed Redis, select it and in the left menu, click on **Access keys**. Then copy the **Primary Connection String** and replace `"AZURE_REDIS_CONNECTION"` value in the `appsettings.Development.json` file :
 
 ![Azure Managed Redis Keys](./assets/azure-cache-for-redis-keys.png)
 
@@ -848,7 +848,7 @@ This method has an attribute called `RedisPubSubTrigger` which is used to trigge
 <div class="task" data-title="Tasks">
 
 > - Define the conditions to trigger the function based on the expiration of a key in the Azure Managed Redis
-> - The connection string of the Azure Managed Redis is defined by the environment variable `AZURE_REDIS_CONNECTION_STRING`
+> - The connection name of the Azure Managed Redis is defined by the environment variables prefixed with `AZURE_REDIS_CONNECTION`
 
 </div>
 
@@ -862,15 +862,15 @@ This method has an attribute called `RedisPubSubTrigger` which is used to trigge
 <details>
 <summary>📚 Toggle solution</summary>
 
-The `RedisPubSubTrigger` attribute is used to trigger the function when an event is raised by the Azure Managed Redis, so the first parameter is the connection string and the second one is the pattern to listen to.
+The `RedisPubSubTrigger` attribute is used to trigger the function when an event is raised by the Azure Managed Redis, so the first parameter is the connection name (prefix for all environment variables controlling the connection) and the second one is the event pattern to listen to.
 
-The connection string environment key `AZURE_REDIS_CONNECTION_STRING` can be specified directly because Azure Functions automatically understands that it is a connection string. Then based on the [Redis key notification documentation][key-notifications] you can use the `expired` event so the pattern to listen to the expiration event of a key will be `__keyevent@0__:expired`.
+The connection string environment key `AZURE_REDIS_CONNECTION` can be specified directly because Azure Functions automatically understands that it is a connection string. Then based on the [Redis key notification documentation][key-notifications] you can use the `expired` event so the pattern to listen to the expiration event of a key will be `__keyevent@0__:expired`.
 
 So the definition of the function should look like this:
 
 ```csharp
 public async Task ProductsEventsTrigger(
-    [RedisPubSubTrigger("AZURE_REDIS_CONNECTION_STRING", "__keyevent@0__:expired")] string key)
+    [RedisPubSubTrigger("AZURE_REDIS_CONNECTION", "__keyevent@0__:expired")] string key)
 ```
 
 </details>
@@ -905,7 +905,7 @@ Then call the Catalog API `/products` endpoint in APIM using the `IHttpClientFac
 
 ```csharp
 public async Task ProductsEventsTrigger(
-    [RedisPubSubTrigger("AZURE_REDIS_CONNECTION_STRING", "__keyevent@0__:expired")] string key)
+    [RedisPubSubTrigger("AZURE_REDIS_CONNECTION", "__keyevent@0__:expired")] string key)
 {
     if (key.Contains(Const.REDIS_KEY_PRODUCTS_ALL))
     {
@@ -921,7 +921,7 @@ public async Task ProductsEventsTrigger(
 
 Now, to test and run it locally you need to create the `local.settings.json` file and copy the content of the `local.settings.json.template` file into it. 
 
-Then you need to set the `AZURE_REDIS_CONNECTION_STRING` environment variable to the connection string of your Azure Managed Redis and update the `CATALOG_API_URL` with the url of APIM endpoint for the Catalog API.
+Then you need to set the `AZURE_REDIS_CONNECTION`-prefixed environment variables to the connection details of your Azure Managed Redis and update the `CATALOG_API_URL` with the url of APIM endpoint for the Catalog API.
 
 
 The connection string for your Azure Managed Redis can be found in the Azure Portal. Select your Azure Managed Redis resource and in the left menu, click on **Access keys**. Then copy the value of the `Primary connection string` into your `local.settings.json` file.
@@ -1086,11 +1086,11 @@ Now that you have identified the product views' stream, you will need to update 
 Update the method `StreamTrigger` and replace the trigger placeholder (the `TODO` comment) with the following code: 
 
 ```csharp
-[RedisStreamTrigger("AZURE_REDIS_CONNECTION_STRING", "%PRODUCT_VIEWS_STREAM_NAME%")] string entry
+[RedisStreamTrigger("AZURE_REDIS_CONNECTION", "%PRODUCT_VIEWS_STREAM_NAME%")] string entry
 ```
 
 This will make the function trigger whenever there is a new item on the stream identified by the environment variable `PRODUCT_VIEWS_STREAM_NAME`. Notice the `%` before and after the environment variable name, this is used to indicate that the value of the environment variable should be used instead of the name of the environment variable.
-Azure Function can automatically resolve the value of the environment variable `AZURE_REDIS_CONNECTION_STRING` because it's a connection string, so no need to add `%` before and after.
+Azure Function can automatically resolve the value of the environment variables prefixed with `AZURE_REDIS_CONNECTION`, so no need to add `%` before and after.
 
 </details>
 
@@ -1126,7 +1126,7 @@ cd src/history-func
 cp local.settings.json.template local.settings.json
 ```
 
-Then you need to update the value of `AZURE_REDIS_CONNECTION_STRING` that you can retreive in your redis instance:
+Then you need to update the value of `AZURE_REDIS_CONNECTION` that you can retrieve in your redis instance:
 
 ![Azure Managed Redis connection string][azure-cache-for-redis-connection-string]
 

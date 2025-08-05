@@ -128,7 +128,7 @@ module cacheFunction './modules/host/function.bicep' = {
     applicationInsightsName: applicationInsights.outputs.name
     storageAccountName: storageAccountFunctions.outputs.name
     deploymentStorageContainerName: cacheDeploymentPackageContainerName
-    azdServiceName: 'cache'
+    azdServiceName: 'cache-refresh'
     tags: tags
     appSettings: [
       {
@@ -231,7 +231,7 @@ module appService './modules/host/appservice.bicep' = {
   params: {
     name: 'app-${resourceSuffixKebabcase}'
     location: location
-    tags: tags
+    tags: union(tags, { 'azd-service-name': 'catalog-api' })
     applicationInsightsName: applicationInsights.outputs.name
     appServicePlanId: appServicePlan.outputs.id
     runtimeName: 'dotnet-isolated'

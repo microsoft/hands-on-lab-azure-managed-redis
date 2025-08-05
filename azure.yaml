@@ -1,24 +1,16 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
 
 name: hol-azure-managed-redis
-# hooks:
-#   postdeploy:
-#     windows:
-#       shell: pwsh
-#       run: ./scripts/post-up.ps1
-#       interactive: true
-#       continueOnError: false
-#     posix:
-#       shell: sh
-#       run: ./scripts/post-up.sh
-#       interactive: true
-#       continueOnError: false
-# services:
-#   uploader:
-#     project: ./src/uploader
-#     language: dotnet
-#     host: function
-#   processor:
-#     project: ./src/processor
-#     language: dotnet
-#     host: function
+services:
+  catalog-api:
+    project: ./src/catalog-api
+    language: dotnet
+    host: appservice
+  history:
+    project: ./src/history-func
+    language: dotnet
+    host: function
+  cache-refresh:
+    project: ./src/cache-refresh-func
+    language: dotnet
+    host: function

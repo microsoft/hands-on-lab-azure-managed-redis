@@ -322,6 +322,7 @@ module roles './modules/security/roles.bicep' = {
     cacheFunctionPrincipalId: cacheFunction.outputs.principalId
     appServicePrincipalId: appService.outputs.identityPrincipalId
     appInsightsName: applicationInsights.outputs.name
+    currentUserObjectId: deployer().objectId
   }
 }
 

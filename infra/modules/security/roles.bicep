@@ -6,6 +6,7 @@ param cacheFunctionUamiPrincipalId string
 param cacheFunctionPrincipalId string
 param appServicePrincipalId string
 param appInsightsName string
+param currentUserObjectId string
 
 // https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/monitor#monitoring-metrics-publisher
 var metricsPublisherRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '3913510d-42f4-4e42-8a64-420c390055eb')
@@ -42,6 +43,16 @@ resource appServiceCosmosDbContributor 'Microsoft.DocumentDB/databaseAccounts/sq
   properties: {
     roleDefinitionId: cosmosDbDataContributor.id
     principalId: appServicePrincipalId
+    scope: cosmosDbAccount.id
+  }
+}
+
+resource currentUserDbContributor 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-05-15' = {
+  parent: cosmosDbAccount
+  name: guid(cosmosDbAccount.id, cosmosDbDataContributor.id, currentUserObjectId)
+  properties: {
+    roleDefinitionId: cosmosDbDataContributor.id
+    principalId: currentUserObjectId
     scope: cosmosDbAccount.id
   }
 }
@@ -92,6 +103,18 @@ resource catalogApiRedisEnterpriseDefaultRole 'Microsoft.Cache/redisEnterprise/d
     accessPolicyName: 'default'
     user: {
       objectId: appServicePrincipalId
+    }
+  }
+  dependsOn: [managedRedisDatabase]
+}
+
+resource currentuserDefaultRole 'Microsoft.Cache/redisEnterprise/databases/accessPolicyAssignments@2025-05-01-preview' = {
+  parent: managedRedisDatabase
+  name: currentUserObjectId
+  properties: {
+    accessPolicyName: 'default'
+    user: {
+      objectId: currentUserObjectId
     }
   }
   dependsOn: [managedRedisDatabase]

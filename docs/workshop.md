@@ -402,8 +402,8 @@ Once duplicated, you will need to fill in the missing values in this new file to
 
 <div class="task" data-title="Task">
 
-> - Set the Azure Cosmos DBconnection string in the `appsettings.Development.json` file
-> - Set the Redis connection string in the `appsettings.Development.json` file (in preparation for the next lab)
+> - Set the Azure Cosmos DB Ednpoint in the `appsettings.Development.json` file
+> - Set the Redis Endpoint in the `appsettings.Development.json` file (in preparation for the next lab)
 > - Set `SIMULATED_DB_LATENCY_IN_SECONDS` to `"1"`
 > - Run the API in your devcontainer or using the provided GitHub Codespace.
 > - Call the GET `/products` endpoint to confirm that the API is working
@@ -421,13 +421,13 @@ cd src/catalog-api
 cp appsettings.json.template appsettings.Development.json
 ```
 
-Inside the Azure Portal, go to your resource group, search for the Azure Cosmos DBaccount, select it and in the left menu, click on **Keys**. Then copy the **Primary Connection String** and replace `"AZURE_COSMOSDB_CONNECTION_STRING"` value in `appsettings.Development.json` :
+Inside the Azure Portal, go to your resource group, search for the Azure Cosmos DBaccount, select it and in the left menu, click on **Keys**. Then copy the **URI** and replace `"AZURE_COSMOSDB_ENDPOINT"` value in `appsettings.Development.json` :
 
-![Cosmos DB Keys](./assets/cosmos-db-keys.png)
+![Cosmos DB Endpoint](./assets/cosmos-db-endpoint.png)
 
-Then inside the Azure Portal, go to your resource group, search the Azure Managed Redis, select it and in the left menu, click on **Access keys**. Then copy the **Primary Connection String** and replace `"AZURE_REDIS_CONNECTION"` value in the `appsettings.Development.json` file :
+Then inside the Azure Portal, go to your resource group, search the Azure Managed Redis instance, then copy the **Endpoint** value and replace `"AZURE_REDIS_ENDPOINT"` value in the `appsettings.Development.json` file :
 
-![Azure Managed Redis Keys](./assets/azure-cache-for-redis-keys.png)
+![Azure Managed Redis Endpoint](./assets/amr-endpoint.png)
 
 You can set `SIMULATED_DB_LATENCY_IN_SECONDS` to `"1"` to create artificial latency to ease perception over cache/no cache data retrieval response time.
 
@@ -444,12 +444,14 @@ dotnet dev-certs https
 
 Depending on the environment you are using :
 
-- Devcontainer :
-  - Once the API is running, browse for the url: http://localhost:5076/products and you should see the list of products.
 - Github Codespace :
+
   - Once the API is running, click on the **ports** tab in the bottom part of Visual Studio Code window.
   - Right click on port `5076` and click **Open in Browser**.
   - You can now browse for http://<your-unique-domain-&-port>/products and you should see the list of products.
+
+- Devcontainer :
+  - Once the API is running, browse for the url: http://localhost:5076/products and you should see the list of products.
 
 </details>
 
@@ -510,6 +512,7 @@ If no product is found in the cache, fetch the data from Azure Cosmos DBand stor
 // Fetch data from Cosmos DB
 var products = await cosmosService.RetrieveAllProductsAsync();
 
+// Writing the products in cache for future requests
 if (products.Any()) {
     await productCacheService.SetProductsAsync(products);
 }
@@ -531,6 +534,7 @@ app.MapGet("/products", async (ICosmosService cosmosService, IProductCacheServic
     // Fetch data from Cosmos DB
     var products = await cosmosService.RetrieveAllProductsAsync();
 
+    // Writing the products in cache for future requests
     if (products.Any()) {
         await productCacheService.SetProductsAsync(products);
     }
@@ -555,43 +559,18 @@ Right click on your App Service in the Visual Studio Code Azure extension panel 
 
 ![Deploy to Web App](./assets/app-service-deploy-to-web-app.png)
 
-Then, select the `catalog-api` folder and click on the **Deploy** button. Wait a few minutes for the deployment to finish. All the environment variables such as the connection string to Azure Managed Redis and Azure Cosmos DBwas already configured in the Azure App Service for you by the infrastructure as code.
+Then, select the `catalog-api` folder and click on the **Deploy** button. Wait a few minutes for the deployment to finish. All the environment variables such as the endpoints to Azure Managed Redis and Azure Cosmos DB were already configured in the Azure App Service for you by the infrastructure as code.
 
 When it's done go to your App Service resource on Azure and click on the **Browse** button. Navigate to the `/products` endpoint and you should see the list of products:
 
 ![App Service browse](./assets/app-service-browse.png)
 
-## View products in the Web App
+<div class="tip" data-title="Tips">
 
-Now that you have a running API you can start consuming it from the Static Web App that you deployed in the previous lab, this will allow you to view the products catalog in a web interface.
-
-To do this, you will need to set the `CATALOG_API` app setting of the Static Web App to point to the url of your API deployed in App Service.
-
-<div class="task" data-title="Tasks">
-
-> Set the `CATALOG_API` app setting of your Static Web App to the url of your API
+> You might need to restart the Web App to apply the changes sometimes
+> ![webapp-restart](./assets/webapp-restart.png)
 
 </div>
-
-<details>
-<summary>📚 Toggle solution</summary>
-
-Go to your App Service resource of the `catalog-api` on Azure and take note of the url of the app:
-
-![Get the url of catalog-api](./assets/catalog-api-get-url.png)
-
-Then go to the Static Web App, select the `Environment variables` menu on the left and click on the `Add` button to add a new app setting.
-
-Next, enter `CATALOG_API` in the name of the setting, and set the value to the url of `catalog-api` which you retrieved previously from App Service. Make sure the URL starts with `https://`. Hit apply to create
-the variable, then hit apply again to apply the change to the Static Web App.
-
-![Set CATALOG_API in the Web App config](./assets/webapp-set-catalog-api.png)
-
-Now click on the **Browse** button in the **Overview** of your static web app to open it and make sure you can see a list of products:
-
-![Viewing products in the Web App](./assets/webapp-view-products.png)
-
-</details>
 
 [redis-dev-clients]: https://redis.io/docs/clients/
 [stackexchange-redis]: https://www.nuget.org/packages/StackExchange.Redis

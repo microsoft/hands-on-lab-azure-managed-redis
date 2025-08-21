@@ -1,47 +1,124 @@
 {
-	"folders": [
-		{
-			"path": "../docs",
-			"name": "Docs"
-		},
-		{
-			"path": "../infra",
-			"name": "Infra"
-		},
-		{
-			"path": "../src/catalog-api",
-			"name": "Web App - Catalog API"
-		},
-		{
-			"path": "../src/cache-refresh-func",
-			"name": "Function - Cache Refresh"
-		},
-		{
-			"path": "../src/history-func",
-			"name": "Function - History Func"
-		},
-		{
-			"path": "../src/catalog-webapp",
-			"name": "Catalog WebApp"
-		}
-	],
-	"settings": {
-		"debug.internalConsoleOptions": "neverOpen",
-		"azurite.location": "/tmp",
-		"omnisharp.autoStart": true,
-		"omnisharp.useModernNet": true
-	},
-	"launch": {
-		"version": "0.2.0",
-		"configurations": [],
-		"compounds": [
-			{
-				"name": "Attach API + Az Func",
-				"configurations": [
-					".NET Core Attach",
-					"Attach to .NET Functions"
-				]
-			}
-		]
-	}
+  "folders": [
+    {
+      "path": "..",
+      "name": "root"
+    },
+    {
+      "path": "../docs",
+      "name": "Docs"
+    },
+    {
+      "path": "../infra",
+      "name": "Infra"
+    },
+    {
+      "path": "../src/catalog-api",
+      "name": "Web App - Catalog API"
+    },
+    {
+      "path": "../src/cache-refresh-func",
+      "name": "Function - Cache Refresh"
+    },
+    {
+      "path": "../src/history-func",
+      "name": "Function - History Func"
+    }
+  ],
+  "settings": {
+    "debug.internalConsoleOptions": "neverOpen",
+    "azurite.location": "/tmp",
+    "omnisharp.autoStart": true,
+    "omnisharp.useModernNet": true
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [],
+    "compounds": [
+      {
+        "name": "Attach API + Az Func",
+        "configurations": [".NET Core Attach", "Attach to .NET Functions"]
+      }
+    ]
+  },
+  "tasks": {
+    "tasks": [
+      {
+        "label": "clean (functions)",
+        "command": "dotnet",
+        "args": [
+          "clean",
+          "/property:GenerateFullPaths=true",
+          "/consoleloggerparameters:NoSummary"
+        ],
+        "type": "process",
+        "problemMatcher": "$msCompile",
+        "options": {
+          "cwd": "${workspaceFolder}"
+        }
+      },
+      {
+        "label": "build (functions)",
+        "command": "dotnet",
+        "args": [
+          "build",
+          "/property:GenerateFullPaths=true",
+          "/consoleloggerparameters:NoSummary"
+        ],
+        "type": "process",
+        "dependsOn": "clean (functions)",
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "problemMatcher": "$msCompile",
+        "options": {
+          "cwd": "${workspaceFolder}"
+        }
+      },
+      {
+        "label": "clean release (functions)",
+        "command": "dotnet",
+        "args": [
+          "clean",
+          "--configuration",
+          "Release",
+          "/property:GenerateFullPaths=true",
+          "/consoleloggerparameters:NoSummary"
+        ],
+        "type": "process",
+        "problemMatcher": "$msCompile",
+        "options": {
+          "cwd": "${workspaceFolder}"
+        }
+      },
+      {
+        "label": "publish (functions)",
+        "command": "dotnet",
+        "args": [
+          "publish",
+          "--configuration",
+          "Release",
+          "/property:GenerateFullPaths=true",
+          "/consoleloggerparameters:NoSummary"
+        ],
+        "type": "process",
+        "dependsOn": "clean release (functions)",
+        "problemMatcher": "$msCompile",
+        "options": {
+          "cwd": "${workspaceFolder}"
+        }
+      },
+      {
+        "type": "func",
+        "dependsOn": "build (functions)",
+        "options": {
+          "cwd": "${workspaceFolder}/bin/Debug/net8.0"
+        },
+        "command": "host start",
+        "isBackground": true,
+        "problemMatcher": "$func-dotnet-watch"
+      }
+    ]
+  }
 }

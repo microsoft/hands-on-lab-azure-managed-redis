@@ -104,9 +104,14 @@ The following tools and access will be necessary to run the lab in good conditio
 - [Azure Functions Core Tools][az-func-core-tools] installed, this will be useful for creating the scaffold of your Azure Functions using command line.
 - If you are using VS Code, you can also install the [Azure Function extension][azure-function-vs-code-extension]
 - The 3 following languages if you want to run all the Azure Functions solutions :
+
   - [.Net 7][download-dotnet]
   - [Python 3.x][download-python]
   - [Node 18][download-node]
+
+  <!-- TODO: Clean if not possible to redis-cli via MSEntra Auth -->
+
+- Optional : [Redis CLI][redis-cli] installed to test a few commands in the introductory Lab 1. Not necessary if you're familiar with the basics of Redis.
 
 Once you have set up your local environment, you can clone the Hands-on-lab-serverless repo you just forked on your machine, and open the local folder in Visual Studio Code and head to the next step.
 
@@ -119,7 +124,7 @@ To do so, click the **burger menu** in the top left corner (visible only with co
 
 ![codespace-workspace](./assets/codespace-workspace.png)
 
- <!-- TODO: Update the image with a white background -->
+ <!-- TODO: Update the image with a white background pointing at the right code-workspace file -->
 
 - Select `.vscode/hands-on-lab-azure-managed-redis.code-workspace` :
 
@@ -201,6 +206,10 @@ az provider registter --namespace 'Microsoft.
 [download-python]: https://www.python.org/downloads/
 [download-node]: https://nodejs.org/en
 
+<!-- TODO: Clean if not possible to redis-cli via MSentra -->
+
+[redis-cli]: https://learn.microsoft.com/fr-fr/azure/redis/how-to-redis-cli-tool
+
 ---
 
 # Lab 1 : Azure Managed Redis
@@ -237,12 +246,13 @@ While you are deploying the infrastructure of the labs, let's discover it togeth
 
 The architecture is composed of the following elements:
 
-- An Azure Static Web App that will be used to display the data from the API
-- An App Service that will host an API and store the data in a Azure Cosmos DB
-- An APIM which will be used as a facade for the APIs
+- An App Service that will host an API and store the data in Azure Cosmos DB
+- An APIM instance which will be used as a facade for the APIs
 - An Azure Managed Redis that will be used to cache the data of the API
 - A first Azure Function that will be triggered by an event of the Azure Managed Redis to refresh the cache when the data expires
 - A second Azure Function that will be used to retrieve and store the navigation history of a specific user in Azure Managed Redis
+- An Azure Load Testing instance for later load tests
+- Azure AI Foundry with a few model deployments for the purpose of the Hands on Lab
 - Azure Monitor that will be used to monitor the Azure Managed Redis
 
 You will discover all these elements during this Hands On Lab.
@@ -271,15 +281,9 @@ You have now seeded your database with the data for this Hands On Lab.
 
 ## Redis basics
 
+<!-- TODO: Add a few descriptions from the doc + SKUs definitions below -->
+
 To be able to use Azure Managed Redis, you need to understand the basics of Redis. Redis is an open source, in-memory data structure store, used as a database, cache, and message broker. It supports data structures such as strings, hashes, lists, sets, sorted sets with range queries, bitmaps, hyperloglogs, geospatial indexes with radius queries and streams.
-
-<div class="tip" data-title="Tips">
-
-> While you are going to use some of these data structures through the course of this lab, it will mainly focus on scenarios and connecting Azure Services with Azure Managed Redis.
->
-> You might want to practice with another lab focused on [interacting with Azure Managed Redis Data Structures][redis-practice-lab].
-
-</div>
 
 These structures are available with any of the pricing tiers available for an Azure Managed Redis:
 
@@ -289,7 +293,9 @@ These structures are available with any of the pricing tiers available for an Az
 - **Enterprise**: High-performance caches **powered by Redis Inc.’s Redis Enterprise software**. This tier supports Redis modules including RediSearch, RedisBloom, RedisJSON, and RedisTimeSeries. Also, it offers even higher availability than the Premium tier.
 - **Enterprise Flash**: Cost-effective large caches powered by Redis Inc.’s Redis Enterprise software. This tier extends Redis data storage to nonvolatile memory, which is cheaper than DRAM, on a VM. It reduces the overall per-GB memory cost.
 
-Let's see quickly how to interact with Azure Managed Redis. Go to your resource group, search the Azure Managed Redis resource, select it and in the left menu, click on **Overview** and click on the **Console** button:
+<!-- TODO: Remove this part if there is no way to connect the Redis-CLI with the MSEntra Authentication. -->
+
+<!-- Let's see quickly how to interact with Azure Managed Redis. Go to your resource group, search the Azure Managed Redis resource, select it and in the left menu, click on **Overview** and click on the **Console** button:
 
 ![Azure Managed Redis Console](./assets/azure-cache-for-redis-console.png)
 
@@ -336,9 +342,9 @@ ping
 
 It should return `PONG` which means that Redis is working.
 
-![Azure Managed Redis Console](./assets/azure-cache-for-redis-console-demo.png)
+![Azure Managed Redis Console](./assets/azure-cache-for-redis-console-demo.png) -->
 
-To summarize, you can use the following basic commands to interact with Redis:
+The following commands are the most basic one to interact with Redis:
 
 - `set` [key] [value]: Sets a key/value in the cache. Returns `OK` on success.
 - `get` [key]: Gets a value from the cache.
@@ -346,6 +352,14 @@ To summarize, you can use the following basic commands to interact with Redis:
 - `del` [key]: Deletes the value associated with the key.
 - `expire` [key] [value in seconds]: Expires the key after the specified number of seconds.
 - `ping`: Ping the server. Returns `PONG`.
+
+<div class="tip" data-title="Tips">
+
+> While you are going to use some of these data structures through the course of this lab, it will mainly focus on scenarios showing how to connect Azure Services with Azure Managed Redis.
+>
+> You might want to practice basic Redis commands with another lab focused on [interacting with Redis Data Structures][redis-practice-lab].
+
+</div>
 
 [static-web-app-overview]: https://learn.microsoft.com/en-us/azure/static-web-apps/overview
 [static-web-app-cli]: https://aka.ms/swa/cli-local-development

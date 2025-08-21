@@ -182,7 +182,7 @@ az provider registter --namespace 'Microsoft.
 > Inputs and parameters to select will be defined, all the rest can remain as default as it has no impact on the scenario.
 
 </div>
- ty
+
 [repo-fork]: https://github.com/microsoft/hands-on-lab-redis/fork
 [azure-vs-code-extension]: https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-node-azure-pack
 [az-cli-install]: https://learn.microsoft.com/en-us/cli/azure/install-azure-cli

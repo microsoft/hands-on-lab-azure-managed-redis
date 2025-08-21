@@ -587,7 +587,7 @@ If you look at the architecture that you deployed for this workshop, remember th
 
 ![Architecture reminder](./assets/architecture.png)
 
-The APIM is used as a facade for all your APIs (in this case you only have one), in the next section you will discover how to add a cache on your APIs using the APIM and Azure Managed Redis.
+APIM is used as a facade for all your APIs (in this case you only have one), in the next section you will discover how to add a cache on your APIs using the APIM and Azure Managed Redis.
 
 ## Disabling cache in your API
 
@@ -600,11 +600,11 @@ You will see the `PRODUCT_LIST_CACHE_DISABLE` environment variable, select the e
 
 and set the value to `1` and click on the **Apply** button.
 
-Now if you try to refresh the list of products in the Web App (by refreshing the page) or calling the `/products` endpoint of the Catalog API (see Lab 2) you should see the response time of your API taking multiples seconds again.
+Now if you try to refresh the list of products in the Web App (by refreshing the page) or calling the `/products` endpoint of the Catalog API (see Lab 2) you should see the response time increasing again due to CosmosDb query, plus the artificial time increase we added to identify easily cached vs non-cached.
 
-You can check the response time of the last request (e.g. GET `/products`) in the green box on the bottom left of the Web App.
+You can check the response time of the last request (e.g. GET `/products`) opening the DevTools of your browser (F12 for Chrome or Edge), and open the Network tab to check the `/products` endpoint time to respond :
 
-![Last HTTP request duration](./assets/webapp-last-http-request-duration.png)
+![Catalog Api Response Time](./assets/catalog-api-response-time.png)
 
 ## Setup APIM External
 

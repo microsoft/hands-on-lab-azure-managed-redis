@@ -606,16 +606,25 @@ You can check the response time of the last request (e.g. GET `/products`) openi
 
 ![Catalog Api Response Time](./assets/catalog-api-response-time.png)
 
-## Setup APIM External
+## Check APIM External Cache
 
-After disabling the caching of the list of products in the application code, it is time to enable it on the APIM level.
+After disabling the caching of the list of products in the application code, it is time to enable it at the APIM level.
 
 The first thing that you need to do, is to connect your Azure Managed Redis to your APIM by adding it as an external cache in APIM configuration.
+
+
 
 <div class="task" data-title="Tasks">
 
 > - Inside your APIM link your Azure Managed Redis as an external cache
 > - Make sure to choose the `Default` region to be able to use it from all your APIM instances
+
+</div>
+
+<div class="tip" data-title="tips">
+
+> - As of today, APIM supports connecting to an external cache only by using a connection string
+> - Make sure to enable the `Access Keys Authentication` on the Redis Instance
 
 </div>
 

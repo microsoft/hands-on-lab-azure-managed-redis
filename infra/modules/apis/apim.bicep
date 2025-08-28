@@ -17,7 +17,7 @@ resource apim 'Microsoft.ApiManagement/service@2024-06-01-preview' = {
   properties: {
     publisherEmail: 'company@hol.io'
     publisherName: 'Hands On Lab Company'
-  }
+  }  
 }
 
 output id string = apim.id

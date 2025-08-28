@@ -69,6 +69,16 @@ module loadTesting './modules/testing/load-testing.bicep' = {
   }
 }
 
+module managedRedis './modules/storage/managed-redis.bicep' = {
+  name: 'managedRedis'
+  scope: resourceGroup
+  params: {
+    name: 'redis-${resourceSuffixKebabcase}'
+    location: location
+    tags: tags
+  }
+}
+
 module apim './modules/apis/apim.bicep' = {
   name: 'apim'
   scope: resourceGroup
@@ -77,6 +87,21 @@ module apim './modules/apis/apim.bicep' = {
     location: location
     tags: tags
   }
+}
+
+module apimExternalCache './modules/apis/apim-external-cache.bicep' = {
+  name: 'apimExternalCache'
+  scope: resourceGroup
+  params: {
+    apimName: apim.outputs.name
+    cacheResourceName: managedRedis.outputs.databaseResourceName
+    cacheResourceEndpoint: managedRedis.outputs.endpoint
+    cacheLocation: 'default'
+  }
+  dependsOn: [
+    apim
+    managedRedis
+  ]
 }
 
 module cosmosDb './modules/storage/cosmos-db.bicep' = {
@@ -300,16 +325,6 @@ module appService './modules/host/appservice.bicep' = {
   }
 }
 
-module managedRedis './modules/storage/managed-redis.bicep' = {
-  name: 'managedRedis'
-  scope: resourceGroup
-  params: {
-    name: 'redis-${resourceSuffixKebabcase}'
-    location: location
-    tags: tags
-  }
-}
-
 module roles './modules/security/roles.bicep' = {
   name: 'roles'
   scope: resourceGroup
@@ -330,3 +345,6 @@ output RESOURCE_GROUP string = resourceGroup.name
 output APP_SERVICE_URI string = appService.outputs.uri
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
+output REDIS_ENDPOINT string = managedRedis.outputs.endpoint
+output REDIS_HOSTNAME string = managedRedis.outputs.hostName
+output REDIS_ID string = managedRedis.outputs.id

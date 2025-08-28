@@ -47,7 +47,7 @@ resource managedRedisEnterpriseDatabase 'Microsoft.Cache/redisEnterprise/databas
       rdbEnabled: false
     }
     deferUpgrade: 'NotDeferred'
-    accessKeysAuthentication: 'Disabled'
+    accessKeysAuthentication: 'Enabled' // Required for APIM integration as of August 2025
   }
 }
 

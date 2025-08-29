@@ -1,8 +1,8 @@
-@apimEndpoint = <YOUR-APIM-RESOURCE-NAME>.azure-api.net
+@apimEndpoint = {{$dotenv APIM_SERVICE_ENDPOINT}}
 @products = products
 @typeJson = Accept: application/json
 
 ###
 # @name = Get Products from APIM Endpoint
-GET https://{{apimEndpoint}}/{{products}}
+GET {{apimEndpoint}}/{{products}}
 {{typeJson}}

@@ -345,3 +345,4 @@ output RESOURCE_GROUP string = resourceGroup.name
 output APP_SERVICE_URI string = appService.outputs.uri
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
+output APIM_SERVICE_ENDPOINT string = 'https://${apim.outputs.name}.azure-api.net'

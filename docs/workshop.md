@@ -571,11 +571,11 @@ To deploy your API directly to the Azure App Service resource, you will use the 
 azd deploy catalog-api
 ```
 
-Once the api is deployed, we will test it against the `/products` endpoint. To do so, use the `requests.http` file saved in the `http` folder and click on the `Send request` link above the `Lab 2 - Test the Catalog API` request :
+Once the api is deployed, we will test it against the `/products` endpoint. To do so, use the `catalog.http` file saved in the `http` folder and click on the `Send request` link above the `Lab 2 - Test the Catalog API` request :
 
 ![Test Catalog API](assets/http-catalog-api.png)
 
-You should see a panel opening on the right part of the `requests.http` tab showing the result of the request after a few seconds of execution :
+You should see a panel opening on the right part of the `catalog.http` tab showing the result of the request after a few seconds of execution :
 
 ![Test Catalog API response](assets/https-catalog-api-result.png)
 
@@ -623,59 +623,56 @@ You will see the `PRODUCT_LIST_CACHE_DISABLE` environment variable, select the e
 
 and set the value to `1` and click on the **Apply** button.
 
-Now if you try to refresh the list of products in the Web App (by refreshing the page) or calling the `/products` endpoint of the Catalog API (see Lab 2) you should see the response time increasing again due to CosmosDb query, plus the artificial time increase we added to identify easily cached vs non-cached.
-
-You can check the response time of the last request (e.g. GET `/products`) opening the DevTools of your browser (F12 for Chrome or Edge), and open the Network tab to check the `/products` endpoint time to respond :
+Now if you try to refresh the list of products by calling the `/products` endpoint of the Catalog API (see Lab 2 `http/catalog.http` file) you should see the response time increasing again due to CosmosDb query only (cache disabled), plus the artificial time increase we added to identify easily cached vs non-cached responses.
 
 ![Catalog Api Response Time](./assets/catalog-api-response-time.png)
 
 ## Check APIM External Cache
 
-After disabling the caching of the list of products in the application code, it is time to enable it at the APIM level.
+After disabling the caching of the list of products in the application code, it is time to enable it from APIM.
 
-The first thing that you need to do, is to connect your Azure Managed Redis to your APIM by adding it as an external cache in APIM configuration.
+Infrastructure as code already linked the Azure Managed Redis Instance for any APIM external cache requirements, and you should be able to check the configuration it already did by opening the `External Cache` panel from the APIM resource.
 
 <div class="task" data-title="Tasks">
 
-> - Inside your APIM link your Azure Managed Redis as an external cache
-> - Make sure to choose the `Default` region to be able to use it from all your APIM instances
+> - Inside your APIM resource, navigate to the `external cache` panel to look at the `default` cache configuration
 
 </div>
 
 <div class="tip" data-title="tips">
 
 > - As of today, APIM supports connecting to an external cache only by using a connection string
-> - Make sure to enable the `Access Keys Authentication` on the Redis Instance
+> - If you need to configure your own External Cache, make sure to enable the `Access Keys Authentication` on the Redis Instance before trying to set the link
 
 </div>
 
 <details>
 <summary>📚 Toggle solution</summary>
 
-Go to your resource group, search the API Management service (APIM), select it and in the left menu, click on **External cache**.
+Open your resource group, search the API Management service (APIM), select it and in the left menu, click on **External cache**.
 
 ![External cache](./assets/apim-external-cache.png)
 
-Then click on **Add** and fill the form with the following information:
-
-- In the `Cache instance` field, select the Azure Managed Redis you deployed using the infrastructure as code
-- In the `Use from` field, set the region to `Default`, this will allow your Azure Managed Redis to be used by all your APIM instances whatever their region.
-
-![External cache form](./assets/apim-external-cache-form.png)
-
-Then, click the **Save** button.
-
-You should now see your Azure Managed Redis in the list of external cache:
+You should see a `default` external cache entry linking the Azure Managed Redis Instance used in the lab.
 
 ![External cache list](./assets/apim-external-cache-list.png)
+
+While the Infrastructure as code already did the configuration for the default external cache resource, you have the ability to link various Azure Managed Redis instances that would be geo-specific, or active geo-replicated replicas of an Azure Managed Redis Replication Group. Having different external caches allows APIM to route the caching operations to the closest Azure Managed Redis instance:
+
+![External Cache Form](./assets/apim-external-cache-form.png)
 
 </details>
 
 ### Setup APIM Cache Policy globally
 
-In order to get your Azure Managed Redis connected to your APIM, you need to configure it so that it can use it for caching.
+Now the Azure Managed Redis instance is linked as the default external cache available to APIM, you need to configure the actual API requests that will need to be cached. APIM allows such a caching mechanism through policy configuration, that can be configured at different levels :
 
-To do this, you will use caching policies.
+- Global
+- Product
+- API
+- Operation
+
+For an easy configuration, you will activate the caching mechanism to external-cache for all the operations of the API that is available in your APIM instance.
 
 <div class="task" data-title="Tasks">
 
@@ -686,26 +683,25 @@ To do this, you will use caching policies.
 
 <div class="tip" data-title="Tips">
 
-> You can find more information about the cache policies here:<br> > [Cache Lookup Policy][cache-lookup-policy]<br> > [Cache Store Policy][cache-store-policy]
+> You can find more information about cache policies here:<br> > [Cache Lookup Policy][cache-lookup-policy]<br> > [Cache Store Policy][cache-store-policy]
+> A lab dedicated to APIM is also available to discover the main capabilities of the Azure API Management Service : [Azure API Management Hands on Lab][hol-apim]
 
 </div>
 
 <details>
 <summary>📚 Toggle solution</summary>
 
-To be able to compare the performance of your API with and without the cache, you will first call it without the cache using [Postman][postman-link] or using the `products.http` inside the `Payloads` folder.
+To be able to compare the performance of your API with and without the cache, you will first call it without the cache using the `products.http` inside the `http` folder.
 
-To do so, go to your resource group, search the API Management service (APIM) and copy the name of the resource into the `products.http`.
-
-Now using HTTP REST file for instance you should see the response time of your API taking multiples seconds:
+Now using the HTTP REST file for instance you should see the response time of your API taking a few seconds:
 
 ![HTTP REST get products](./assets/apim-http-rest-before-caching.png)
 
-Now to reduce this time you can specify a policy to use the cache. Select **All operations** in the **Inbound processing** section and click on the **+ Add policy** button:
+To reduce this time you can specify a policy to use the cache. From the APIM `API` panel, select the `Products` Api and select **All operations** in the **Inbound processing** section. Then click on the **+ Add policy** button:
 
 ![APIM policy](./assets/apim-in-bound-policy.png)
 
-Select the cache-lookup/store policy and click on the **Add** button:
+Select the cache-lookup/store policy and click on **Add** :
 
 ![APIM cache-lookup policy](./assets/apim-cache-lookup-store-policy.png)
 
@@ -715,13 +711,14 @@ Set the duration to `30` seconds for the cache to be able to test it and click *
 
 In real life scenario, this value will depend on your business needs.
 
-That's it! You have now your cache policy setup **globally** on your API. You can now test it again with Postman or HTTP REST you should see the response time of your API reduced to a few milliseconds!
+That's it! You now have your cache policy set up for all the operations of your API. The first call to an operation will cache the response of the API. From the next call, up to the retention delay (30 seconds in our scenario), the response will come from the cache directly, without hitting the backend API anymore, coming back way faster.
+You can now test it again with the `products.http` file, at least twice, and should see the response time of your API reduced to a few milliseconds from the second call!
 
 </details>
 
 ### Caching a specific operation
 
-In the previous section, you saw how to setup a cache policy globally for all your operations. But what if you want to cache only a specific operation?
+In the previous section, you saw how to setup a cache policy globally for all your operations. But what if you want to cache only a specific operation, a product catalog while making sure a news feed endpoint always returns the latest news for example ?
 
 Before testing this scenario, you need to remove the global cache policy you just added. To do this, go to the **All operations** section of your API and click on the **...** button of the **cache-lookup** and the **cache-store** policies and select **Delete**:
 
@@ -732,8 +729,9 @@ Then click on the **Save** button.
 <div class="task" data-title="Tasks">
 
 > - This task is a more advanced one, you will need to edit the policy manually
-> - Use the policies `cache-lookup-value` and `cache-store-value` to cache only the **Get Products** operation
+> - Set the policies `cache-lookup-value` and `cache-store-value` to cache only the **Get Products** operation
 > - Set the duration to `60` seconds for the cache to be able to test it
+> - Define the cache type as `external`
 > - You will need to use the `return-response` in the `inbound` block of the policy to return the result of the cache directly if it exists
 
 </div>
@@ -774,7 +772,7 @@ Then, inside the editor replace the `inbound` block of the policy with the follo
 </inbound>
 ```
 
-This policy will first try to get the value from the cache using the key `products:all` and if it exists, it will return it. If it exists it will return the result of the cache directly using the `return-response`. If it doesn't exist, it will continue the execution of the policy.
+This policy will first try to get the value from the cache using the key `products:all` and if it exists, it will return it directly using the `return-response`. If it doesn't exist, it will continue the execution of the call and execute other policies if any.
 
 Then, add the following policy in the outbound block of the policy:
 
@@ -791,44 +789,24 @@ Notice the `external` cache type is used in both policies. This is because you a
 
 Then, click on the **Save** button.
 
-You can now test your API again with Postman or the HTTP REST file like previously and you should see the response time of this particular operation reduced to a few milliseconds, but this time only for the **Get Products** operation.
+You can now test your API again with the `products.http` file like previously and you should see the response time of this particular operation reduced to a few milliseconds, but this time only for the **Get Products** operation.
+
+This behaviour mainly helps at managing the caching lifecycle (or [caching invalidations][cache-invalidation]) depending on the type of content :
+
+- A list of flight destinations might be cached for a long period : 1 week (time to live) might be acceptable as new destinations might be added from now.
+- However, the pricing of a flight might be prone to the current percentage of booking or market interest for a specific destination, and caching those prices might need to be updated more frequently : A caching time to live of a few minutes might be more appropriate.
+
+Having the ability to apply the caching policy at the operation level allows for granular data freshness even for a wide API providing with a wide variety of operations.
+APIM acting as a facade in front of the APIs even allows for implementing a caching mechanism even for legacy application without the need for app evolutions.
 
 </details>
 
-## Retesting product caching
-
-Now that you have moved the caching logic of the list of products from the application code (e.g. Catalog API) to APIM, it is time to retrieve products again in the Web App and ensure the list gets served from cache.
-
-<div class="task" data-title="Tasks">
-
-> Update the `CATALOG_API` app setting of your Static Web App to point to the url of your API in APIM and ensure data fetching is fast again.
-
-</div>
-
-<div class="tip" data-title="Tips">
-
-> `CATALOG_API` must point to the root of your API, not to the `/products` endpoint.
-
-</div>
-
-<details>
-<summary>📚 Toggle solution</summary>
-
-Similarly to what you did at the end of Lab 2, set the value of the `CATALOG_API` app setting of the Static Web App to the root url of the API in APIM (without `/products` at the end).
-
-![APIM Url](./assets/apim-gateway-url.png)
-
-Reload the Web App and make sure the duration of the last call (bottom left corner of the Web App) gets lower after the first call.
-
-You will be able to get more metrics about the performance of your cache in Lab 5 using Azure Monitor.
-
-</details>
-
-[postman-link]: https://www.postman.com/
 [cache-lookup-policy]: https://learn.microsoft.com/en-us/azure/api-management/cache-lookup-policy
 [cache-store-policy]: https://learn.microsoft.com/en-us/azure/api-management/cache-store-policy
 [cache-lookup-value-policy]: https://learn.microsoft.com/en-us/azure/api-management/cache-lookup-value-policy
 [cache-store-value-policy]: https://learn.microsoft.com/en-us/azure/api-management/cache-store-value-policy
+[cache-invalidation]: https://redis.io/glossary/cache-invalidation/
+[hol-apim]: https://azure.github.io/apim-lab/
 
 ---
 
@@ -1205,6 +1183,8 @@ As the Azure Function is already up and running, you can directly call the `/api
 Before calling the endpoint, make sure to get a User ID by copying the UUID that you see on the top right of the Web App. You can also get it from the field `userId` in the stream data items.
 
 So the final request should look like this:
+
+<!-- TODO: Update with an .http file request -->
 
 ```sh
 curl \

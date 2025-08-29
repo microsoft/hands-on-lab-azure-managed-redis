@@ -551,9 +551,27 @@ Thanks Redis! ;)
 
 ## Deploy the API to Azure
 
-Now that you have your API working locally, you will deploy it to Azure. To do this, you will use the Azure App Service provided by the Terraform infrastructure as code applied earlier. This service allows you to host your API in the cloud.
+Now that you have your API working locally, you will deploy it to Azure. To do this, you will use the Azure App Service provided by the Terraform infrastructure as code applied earlier. This service allows you to host your APIs and Web Apps in the cloud.
 
-To deploy your API directly from Visual Studio Code, you will use the Visual Studio Code Azure extension panel.
+<div class="task" data-title="Tasks">
+
+> - Execute the azd deploy command for the catalog-api only.
+> - Test the `/products` endpoint of the api hosted in the Azure App Service Resource
+
+</div>
+
+<details>
+<summary>📚 Toggle solution</summary>
+
+To deploy your API directly to the Azure App Service resource, you will use the `azd deploy` command from the terminal (Ctrl+J to open the terminal if closed) and test the `/products` api endpoint.
+
+```bash
+azd deploy catalog-api
+```
+
+Once the api is deployed, we will test it against the `/products` endpoint. To do so, use the `requests.http` file saved in the `src/catalog-api` folder and click on the
+
+
 
 Right click on your App Service in the Visual Studio Code Azure extension panel and select **Deploy to Web App...** :
 
@@ -567,7 +585,7 @@ When it's done go to your App Service resource on Azure and click on the **Brows
 
 <div class="tip" data-title="Tips">
 
-> You might need to restart the Web App to apply the changes sometimes
+> You might need to restart the Web App to apply the changes
 > ![webapp-restart](./assets/webapp-restart.png)
 
 </div>
@@ -611,8 +629,6 @@ You can check the response time of the last request (e.g. GET `/products`) openi
 After disabling the caching of the list of products in the application code, it is time to enable it at the APIM level.
 
 The first thing that you need to do, is to connect your Azure Managed Redis to your APIM by adding it as an external cache in APIM configuration.
-
-
 
 <div class="task" data-title="Tasks">
 

@@ -14,3 +14,14 @@ services:
     project: ./src/cache-refresh-func
     language: dotnet
     host: function
+
+# Used to fill in values from the .env file after infrastructure is provisioned to the system environment variables.
+# This allows referencing azd .env variables in scripts and other places.
+hooks:
+  postprovision:
+    posix:
+      shell: sh
+      run: azd env get-values > http/.env
+    powershell:
+      shell: pwsh
+      run: azd env get-values | Set-Content -Path "http/.env"

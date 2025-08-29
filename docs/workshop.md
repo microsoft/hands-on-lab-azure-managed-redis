@@ -553,6 +553,8 @@ Thanks Redis! ;)
 
 Now that you have your API working locally, you will deploy it to Azure. To do this, you will use the Azure App Service provided by the Terraform infrastructure as code applied earlier. This service allows you to host your APIs and Web Apps in the cloud.
 
+All the environment variables such as the endpoints to Azure Managed Redis and Azure Cosmos DB were already configured in the Azure App Service for you by the infrastructure as code.
+
 <div class="task" data-title="Tasks">
 
 > - Execute the azd deploy command for the catalog-api only.
@@ -569,26 +571,29 @@ To deploy your API directly to the Azure App Service resource, you will use the 
 azd deploy catalog-api
 ```
 
-Once the api is deployed, we will test it against the `/products` endpoint. To do so, use the `requests.http` file saved in the `src/catalog-api` folder and click on the
+Once the api is deployed, we will test it against the `/products` endpoint. To do so, use the `requests.http` file saved in the `http` folder and click on the `Send request` link above the `Lab 2 - Test the Catalog API` request :
 
+![Test Catalog API](assets/http-catalog-api.png)
 
+You should see a panel opening on the right part of the `requests.http` tab showing the result of the request after a few seconds of execution :
 
-Right click on your App Service in the Visual Studio Code Azure extension panel and select **Deploy to Web App...** :
+![Test Catalog API response](assets/https-catalog-api-result.png)
 
-![Deploy to Web App](./assets/app-service-deploy-to-web-app.png)
+This panel shows the result of the `/products` GET request, as well as the time it took to respond.
 
-Then, select the `catalog-api` folder and click on the **Deploy** button. Wait a few minutes for the deployment to finish. All the environment variables such as the endpoints to Azure Managed Redis and Azure Cosmos DB were already configured in the Azure App Service for you by the infrastructure as code.
-
-When it's done go to your App Service resource on Azure and click on the **Browse** button. Navigate to the `/products` endpoint and you should see the list of products:
-
-![App Service browse](./assets/app-service-browse.png)
+</details>
 
 <div class="tip" data-title="Tips">
 
-> You might need to restart the Web App to apply the changes
+> You might need to restart the Web App to apply the changes and properly test your `/products` endpoint
 > ![webapp-restart](./assets/webapp-restart.png)
 
 </div>
+
+You now have an API running in Azure App Service that is able to test the impact of a caching system by switching the following environment variables :
+
+- SIMULATED_DB_LATENCY_IN_SECONDS : Integer value voluntarily increasing the delay before responding from database to help identifying a response coming from the cache or the database
+- PRODUCT_LIST_CACHE_DISABLE : 0 (Enable) and 1(Disable) the Redis caching system for steps in the lab.
 
 [redis-dev-clients]: https://redis.io/docs/clients/
 [stackexchange-redis]: https://www.nuget.org/packages/StackExchange.Redis

@@ -24,7 +24,7 @@ resource apimcache 'Microsoft.ApiManagement/service/caches@2024-10-01-preview' =
   name: externalCacheName
   properties: {
     connectionString: '${cacheResourceEndpoint},password=${cacheResourceAccessKey},ssl=True,abortConnect=False'
-    description: 'External Cache used as a Default Cache for the API Management instance regions.'
+    description: 'External Cache used as a Default Cache for all the API Management instance regions.'
     resourceId: 'https://management.azure.com${cacheDatabase.id}'
     useFromLocation: cacheLocation
   }

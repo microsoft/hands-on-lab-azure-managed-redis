@@ -5,13 +5,6 @@ targetScope = 'subscription'
 @description('Name which is used to generate a short unique hash for each resource')
 param name string
 
-@description('The environment deployed')
-@allowed(['lab', 'dev', 'stg', 'prd'])
-param environment string = 'lab'
-
-@description('Name of the application')
-param application string = 'rds'
-
 @description('The location where the resources will be created.')
 @allowed([
   'eastus'
@@ -20,7 +13,14 @@ param application string = 'rds'
   'swedencentral'
   'westus3'
 ])
-param location string = 'eastus2'
+param location string
+
+@description('The environment deployed')
+@allowed(['lab', 'dev', 'stg', 'prd'])
+param environment string = 'lab'
+
+@description('Name of the application')
+param application string = 'rds'
 
 @description('Optional. The tags to be assigned to the created resources.')
 param tags object = {
@@ -69,6 +69,16 @@ module loadTesting './modules/testing/load-testing.bicep' = {
   }
 }
 
+module managedRedis './modules/storage/managed-redis.bicep' = {
+  name: 'managedRedis'
+  scope: resourceGroup
+  params: {
+    name: 'redis-${resourceSuffixKebabcase}'
+    location: location
+    tags: tags
+  }
+}
+
 module apim './modules/apis/apim.bicep' = {
   name: 'apim'
   scope: resourceGroup
@@ -77,6 +87,21 @@ module apim './modules/apis/apim.bicep' = {
     location: location
     tags: tags
   }
+}
+
+module apimExternalCache './modules/apis/apim-external-cache.bicep' = {
+  name: 'apimExternalCache'
+  scope: resourceGroup
+  params: {
+    apimName: apim.outputs.name
+    cacheResourceName: managedRedis.outputs.databaseResourceName
+    cacheResourceEndpoint: managedRedis.outputs.endpoint
+    cacheLocation: 'default'
+  }
+  dependsOn: [
+    apim
+    managedRedis
+  ]
 }
 
 module cosmosDb './modules/storage/cosmos-db.bicep' = {
@@ -300,16 +325,6 @@ module appService './modules/host/appservice.bicep' = {
   }
 }
 
-module managedRedis './modules/storage/managed-redis.bicep' = {
-  name: 'managedRedis'
-  scope: resourceGroup
-  params: {
-    name: 'redis-${resourceSuffixKebabcase}'
-    location: location
-    tags: tags
-  }
-}
-
 module roles './modules/security/roles.bicep' = {
   name: 'roles'
   scope: resourceGroup
@@ -322,6 +337,7 @@ module roles './modules/security/roles.bicep' = {
     cacheFunctionPrincipalId: cacheFunction.outputs.principalId
     appServicePrincipalId: appService.outputs.identityPrincipalId
     appInsightsName: applicationInsights.outputs.name
+    currentUserObjectId: deployer().objectId
   }
 }
 
@@ -329,3 +345,4 @@ output RESOURCE_GROUP string = resourceGroup.name
 output APP_SERVICE_URI string = appService.outputs.uri
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
+output APIM_SERVICE_ENDPOINT string = 'https://${apim.outputs.name}.azure-api.net'

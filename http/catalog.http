@@ -1,0 +1,2 @@
+# Lab 2 - Test the Catalog API
+GET {{$dotenv APP_SERVICE_URI}}/products

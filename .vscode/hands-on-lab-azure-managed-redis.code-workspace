@@ -1,47 +1,44 @@
 {
-	"folders": [
-		{
-			"path": "../docs",
-			"name": "Docs"
-		},
-		{
-			"path": "../infra",
-			"name": "Infra"
-		},
-		{
-			"path": "../src/catalog-api",
-			"name": "Web App - Catalog API"
-		},
-		{
-			"path": "../src/cache-refresh-func",
-			"name": "Function - Cache Refresh"
-		},
-		{
-			"path": "../src/history-func",
-			"name": "Function - History Func"
-		},
-		{
-			"path": "../src/catalog-webapp",
-			"name": "Catalog WebApp"
-		}
-	],
-	"settings": {
-		"debug.internalConsoleOptions": "neverOpen",
-		"azurite.location": "/tmp",
-		"omnisharp.autoStart": true,
-		"omnisharp.useModernNet": true
-	},
-	"launch": {
-		"version": "0.2.0",
-		"configurations": [],
-		"compounds": [
-			{
-				"name": "Attach API + Az Func",
-				"configurations": [
-					".NET Core Attach",
-					"Attach to .NET Functions"
-				]
-			}
-		]
-	}
+  "folders": [
+    {
+      "path": "..",
+      "name": "root"
+    },
+    {
+      "path": "../docs",
+      "name": "Docs"
+    },
+    {
+      "path": "../infra",
+      "name": "Infra"
+    },
+    {
+      "path": "../src/catalog-api",
+      "name": "Web App - Catalog API"
+    },
+    {
+      "path": "../src/cache-refresh-func",
+      "name": "Function - Cache Refresh"
+    },
+    {
+      "path": "../src/history-func",
+      "name": "Function - History Func"
+    }
+  ],
+  "settings": {
+    "debug.internalConsoleOptions": "neverOpen",
+    "azurite.location": "/tmp",
+    "omnisharp.autoStart": true,
+    "omnisharp.useModernNet": true
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [],
+    "compounds": [
+      {
+        "name": "Attach API + Az Func",
+        "configurations": [".NET Core Attach", "Attach to .NET Functions"]
+      }
+    ]
+  }
 }

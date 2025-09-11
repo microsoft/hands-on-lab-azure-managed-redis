@@ -1,8 +1,8 @@
 ---
 published: true
 type: workshop
-title: Product Hands-on Lab - Redis Cache in the Azure world
-short_title: Redis Workshop
+title: Product Hands-on Lab - Azure Managed Redis in the Azure World
+short_title: Azure Managed Redis Workshop
 description: This workshop will show you how Azure Managed Redis is integrated with other Azure Services.
 level: beginner # Required. Can be 'beginner', 'intermediate' or 'advanced'
 navigation_numbering: false
@@ -10,14 +10,12 @@ authors: # Required. You can add as many authors as needed
   - Damien Aicheh
   - Julien Strebler
   - Iheb Khemissi
-  - Yann Duval
 contacts: # Required. Must match the number of authors
   - "@damienaicheh"
   - "@justrebl"
   - "@ikhemissi"
-  - "@yannduval"
-duration_minutes: 120
-tags: azure, Azure Managed Redis, database, serverless, apim, cache, csu
+duration_minutes: 240
+tags: azure, managed redis, database, serverless, apim, cache, csu
 navigation_levels: 3
 ---
 
@@ -33,7 +31,7 @@ Before starting this lab, be sure to set your Azure environment :
 
 - An Azure Subscription with the **Contributor** role to create and manage the labs' resources and deploy the infrastructure as code
 - A dedicated resource group for this lab to ease the cleanup at the end.
-- Register the Azure providers on your Azure Subscription if not done yet: `Microsoft.CognitiveServices`, `Microsoft.DocumentDB`, `Microsoft.EventGrid`, `Microsoft.KeyVault`, `Microsoft.Logic`, `Microsoft.SignalRService`, `Microsoft.Web`
+- Register the Azure providers on your Azure Subscription if not done yet: `Microsoft.CognitiveServices`, `Microsoft.DocumentDB`, `Microsoft.Web`, `Microsoft.OperationalInsights`, `Microsoft.Cache`, `Microsoft.ApiManagement`
 
 To retrieve the lab content :
 
@@ -77,14 +75,14 @@ To get your codespace ready for the labs, here are a few steps to execute :
 
 ### 🥈 : Using a local Devcontainer
 
-This repo comes with a Devcontainer configuration that will let you open a fully configured dev environment from your local Visual Studio Code, while still being completely isolated from the rest of your local machine configuration : No more dependancy conflict.
+This repository comes with a Devcontainer configuration that will let you open a fully configured dev environment from your local Visual Studio Code, while still being completely isolated from the rest of your local machine configuration : No more dependency conflict.
 Here are the required tools to do so :
 
 - [Git client][git-client]
 - [Docker Desktop][docker-desktop] running
 - [Visual Studio Code][vs-code] installed
 
-Start by cloning the Hands-on-lab-Serverless repo you just forked on your local Machine and open the local folder in Visual Studio Code.
+Start by cloning the Hands-on-lab-Azure-Managed-Redis repository you just forked on your local Machine and open the local folder in Visual Studio Code.
 Once you have cloned the repository locally, make sure Docker Desktop is up and running and open the cloned repository in Visual Studio Code.
 
 You will be prompted to open the project in a Dev Container. Click on `Reopen in Container`.
@@ -105,15 +103,13 @@ The following tools and access will be necessary to run the lab in good conditio
 - If you are using VS Code, you can also install the [Azure Function extension][azure-function-vs-code-extension]
 - The 3 following languages if you want to run all the Azure Functions solutions :
 
-  - [.Net 7][download-dotnet]
-  - [Python 3.x][download-python]
-  - [Node 18][download-node]
+  - [.Net 8][download-dotnet]
 
   <!-- TODO: Clean if not possible to redis-cli via MSEntra Auth -->
 
 - Optional : [Redis CLI][redis-cli] installed to test a few commands in the introductory Lab 1. Not necessary if you're familiar with the basics of Redis.
 
-Once you have set up your local environment, you can clone the Hands-on-lab-serverless repo you just forked on your machine, and open the local folder in Visual Studio Code and head to the next step.
+Once you have set up your local environment, you can clone the Hands-on-lab-azure-managed-redis repo you just forked on your machine, and open the local folder in Visual Studio Code and head to the next step.
 
 ## 🚀 Visual Studio Code Setup
 
@@ -142,7 +138,7 @@ Let's begin!
 
 > - Log into your Azure subscription in your environment using Azure CLI and on the [Azure Portal][az-portal] using your credentials.
 > - Instructions and solutions will be given for the Azure CLI, but you can also use the Azure Portal if you prefer.
-> - Register the Azure providers on your Azure Subscription if not done yet: `Microsoft.Web`, `Microsoft.OperationalInsights`, `Microsoft.Cache`, `Microsoft.ApiManagement`, `Microsoft.DocumentDB`
+> - Register the Azure providers on your Azure Subscription if not done yet: `Microsoft.Web`, `Microsoft.OperationalInsights`, `Microsoft.Cache`, `Microsoft.ApiManagement`, `Microsoft.DocumentDB`, `Microsoft.LoadTestService`.
 
 </div>
 
@@ -176,7 +172,7 @@ az provider register --namespace 'Microsoft.ApiManagement'
 # Azure Cosmos DB
 az provider register --namespace 'Microsoft.DocumentDB'
 # Azure Load Testing
-az provider registter --namespace 'Microsoft.
+az provider register --namespace 'Microsoft.LoadTestService'
 ```
 
 </details>
@@ -188,7 +184,7 @@ az provider registter --namespace 'Microsoft.
 
 </div>
 
-[repo-fork]: https://github.com/microsoft/hands-on-lab-redis/fork
+[repo-fork]: https://github.com/microsoft/hands-on-lab-azure-managed-redis/fork
 [azure-vs-code-extension]: https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-node-azure-pack
 [az-cli-install]: https://learn.microsoft.com/en-us/cli/azure/install-azure-cli
 [azd-cli]: https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/install-azd?tabs=winget-windows%2Cbrew-mac%2Cscript-linux&pivots=os-windows
@@ -202,9 +198,7 @@ az provider registter --namespace 'Microsoft.
 [docker-desktop]: https://www.docker.com/products/docker-desktop/
 [git-client]: https://git-scm.com/downloads
 [github-account]: https://github.com/join
-[download-dotnet]: https://dotnet.microsoft.com/en-us/download/dotnet/7.0
-[download-python]: https://www.python.org/downloads/
-[download-node]: https://nodejs.org/en
+[download-dotnet]: https://dotnet.microsoft.com/en-us/download/dotnet/8.0
 
 <!-- TODO: Clean if not possible to redis-cli via MSentra -->
 
@@ -363,8 +357,8 @@ The following commands are the most basic one to interact with Redis:
 
 [static-web-app-overview]: https://learn.microsoft.com/en-us/azure/static-web-apps/overview
 [static-web-app-cli]: https://aka.ms/swa/cli-local-development
-[static-web-app-code]: https://github.com/microsoft/hands-on-lab-redis/tree/main/src/catalog-webapp
-[database-seed-zip]: https://github.com/microsoft/hands-on-lab-redis/releases/download/latest/database-sample-data.zip
+[static-web-app-code]: https://github.com/microsoft/hands-on-lab-azure-managed-redis/tree/main/src/catalog-webapp
+[database-seed-zip]: https://github.com/microsoft/hands-on-lab-azure-managed-redis/releases/download/latest/database-sample-data.zip
 [redis-practice-lab]: https://azure.github.io/redis-on-azure-workshop/
 
 ---

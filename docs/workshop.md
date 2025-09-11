@@ -370,7 +370,7 @@ The following commands are the most basic one to interact with Redis:
 
 <div class="info" data-title="Note">
 
-> While you are going to use some of these data structures through the course of this lab, it will mainly focus on scenarios showing how to connect Azure Services with Azure Managed Redis.
+> In the following labs, you will mainly focus on scenarios showing how to connect Azure Services with Azure Managed Redis.
 
 </div>
 

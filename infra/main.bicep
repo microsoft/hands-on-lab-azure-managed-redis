@@ -98,10 +98,6 @@ module apimExternalCache './modules/apis/apim-external-cache.bicep' = {
     cacheResourceEndpoint: managedRedis.outputs.endpoint
     cacheLocation: 'default'
   }
-  dependsOn: [
-    apim
-    managedRedis
-  ]
 }
 
 module cosmosDb './modules/storage/cosmos-db.bicep' = {
@@ -341,7 +337,7 @@ module roles './modules/security/roles.bicep' = {
   }
 }
 
-output RESOURCE_GROUP string = resourceGroup.name
+output AZURE_RESOURCE_GROUP string = resourceGroup.name
 output APP_SERVICE_URI string = appService.outputs.uri
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId

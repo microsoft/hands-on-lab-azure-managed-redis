@@ -214,7 +214,7 @@ If you look at the project, you will see an `infra` folder. It contains the infr
 
 You will deploy it using Azure Developer CLI (azd):
 
-First, init the environment:
+First, at the root of your repository, run the following command to init the environment:
 
 ```bash
 azd init -l eastus2 -e dev
@@ -225,6 +225,8 @@ Next, provision the resources and the code source of the lab:
 ```bash
 azd up
 ```
+
+It will ask you to login to your Azure account if you are not logged in yet and to select your Azure subscription if you have access to multiple subscriptions.
 
 <div class="warning" data-title="Warning">
 
@@ -275,27 +277,46 @@ You have now seeded your database with the data for this Hands On Lab.
 
 ## Redis basics
 
-<!-- TODO: Add a few descriptions from the doc + SKUs definitions below -->
+### Introduction to Managed Redis service
 
 To be able to use Azure Managed Redis, you need to understand the basics of Redis. Redis is an open source, in-memory data structure store, used as a database, cache, and message broker. It supports data structures such as strings, hashes, lists, sets, sorted sets with range queries, bitmaps, hyperloglogs, geospatial indexes with radius queries and streams.
 
 These structures are available with any of the pricing tiers available for an Azure Managed Redis:
 
-- **Basic**: An OSS Redis cache running on a single VM. This tier has no service-level agreement (SLA) and is ideal for development/test and noncritical workloads.
-- **Standard**: An OSS Redis cache running on two VMs in a replicated configuration.
-- **Premium**: High-performance OSS Redis caches. This tier offers higher throughput, lower latency, better availability, and more features. Premium caches are deployed on more powerful VMs compared to the VMs for Basic or Standard caches.
-- **Enterprise**: High-performance caches **powered by Redis Inc.’s Redis Enterprise software**. This tier supports Redis modules including RediSearch, RedisBloom, RedisJSON, and RedisTimeSeries. Also, it offers even higher availability than the Premium tier.
-- **Enterprise Flash**: Cost-effective large caches powered by Redis Inc.’s Redis Enterprise software. This tier extends Redis data storage to nonvolatile memory, which is cheaper than DRAM, on a VM. It reduces the overall per-GB memory cost.
+- **Memory Optimized**: Ideal for memory-intensive use cases that require a high memory-to-vCPU ratio (8:1) but don't need the highest throughput performance. It provides a lower price point for scenarios where less processing power or throughput is necessary, making it an excellent choice for development and testing environments.
+- **Balanced (Memory + Compute)** - Offers a balanced memory-to-vCPU (4:1) ratio, making it ideal for standard workloads. It provides a healthy balance of memory and compute resources.
+- **Compute Optimized** - Designed for performance-intensive workloads requiring maximum throughput, with a low memory-to-vCPU (2:1) ratio. It's ideal for applications that demand the highest performance.
+One tier stores data both in-memory and on-disk:
 
-<!-- TODO: Remove this part if there is no way to connect the Redis-CLI with the MSEntra Authentication. -->
+- **Flash Optimized (preview)** - Enables Redis clusters to automatically move less frequently accessed data from memory (RAM) to NVMe storage. This reduces performance, but allows for cost-effective scaling of caches with large datasets.
 
-<!-- Let's see quickly how to interact with Azure Managed Redis. Go to your resource group, search the Azure Managed Redis resource, select it and in the left menu, click on **Overview** and click on the **Console** button:
+### Interact with Azure Managed Redis
 
-![Azure Managed Redis Console](./assets/azure-cache-for-redis-console.png)
+Let's see quickly how to interact with Azure Managed Redis. First, let's open your terminal (Ctrl + J) and run the following command to get an access token to connect to your Azure Managed Redis instance using the right scope:
 
-Now inside the console, let's play with basic Redis commands.
+```bash
+TOKEN=$(az account get-access-token --scope https://redis.azure.com/.default --query "accessToken" -o tsv)
+```
 
-Run the following command to set a key/value pair in Redis:
+Then run the following command to get your user identifier which looks like a GUID:
+
+```bash
+USER_ID=$(az account show --query id -o tsv)
+```
+
+Inside the resource group, search the Azure Managed Redis resource, select it and in the **Overview** menu, copy the **Endpoint** value and put it in the following command to get your Azure Managed Redis instance endpoint:
+
+```bash
+MANAGED_REDIS_ENDPOINT=<your-redis-endpoint>.redis.azure.net:10000
+```
+
+Finally, run the following command to authenticate to your Azure Managed Redis instance using the `redis-cli` tool:
+
+```bash
+redis-cli -u redis://$USER_ID:$TOKEN@$MANAGED_REDIS_ENDPOINT --tls -c
+```
+
+Now inside your terminal, let's play with basic Redis commands. Run the following command to set a key/value pair in Redis:
 
 ```bash
 set key1 myvalue1
@@ -336,7 +357,7 @@ ping
 
 It should return `PONG` which means that Redis is working.
 
-![Azure Managed Redis Console](./assets/azure-cache-for-redis-console-demo.png) -->
+### Takeaway: Basic Redis commands
 
 The following commands are the most basic one to interact with Redis:
 
@@ -347,19 +368,13 @@ The following commands are the most basic one to interact with Redis:
 - `expire` [key] [value in seconds]: Expires the key after the specified number of seconds.
 - `ping`: Ping the server. Returns `PONG`.
 
-<div class="tip" data-title="Tips">
+<div class="info" data-title="Note">
 
 > While you are going to use some of these data structures through the course of this lab, it will mainly focus on scenarios showing how to connect Azure Services with Azure Managed Redis.
->
-> You might want to practice basic Redis commands with another lab focused on [interacting with Redis Data Structures][redis-practice-lab].
 
 </div>
 
-[static-web-app-overview]: https://learn.microsoft.com/en-us/azure/static-web-apps/overview
-[static-web-app-cli]: https://aka.ms/swa/cli-local-development
-[static-web-app-code]: https://github.com/microsoft/hands-on-lab-azure-managed-redis/tree/main/src/catalog-webapp
 [database-seed-zip]: https://github.com/microsoft/hands-on-lab-azure-managed-redis/releases/download/latest/database-sample-data.zip
-[redis-practice-lab]: https://azure.github.io/redis-on-azure-workshop/
 
 ---
 

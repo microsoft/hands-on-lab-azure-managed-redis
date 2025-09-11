@@ -683,17 +683,21 @@ Now the Azure Managed Redis instance is linked as the default external cache ava
 
 For an easy configuration, you will activate the caching mechanism to external-cache for all the operations of the API that is available in your APIM instance.
 
+API Management also offers a strict OAuth2 validation process where the JWT claims can be validated granularly to correspond to strong zero trust strategies to control API access, but this is not the purpose of this lab, so we will simplify the authentication to API Management via a simple validate-jwt policy.
+
 <div class="task" data-title="Tasks">
 
 > - Using the interface add the policies `cache-lookup` and `cache-store` to cache all the operations of your API
 > - Set the duration to `30` seconds for the cache to be able to test it
+> - Implement a basic jwt validation policy to secure the access to your `products` api
+> - Test the `Get Products` api twice to validate the impact of caching the results
 
 </div>
 
 <div class="tip" data-title="Tips">
 
-> You can find more information about cache policies here:<br> > [Cache Lookup Policy][cache-lookup-policy]<br> > [Cache Store Policy][cache-store-policy]
-> A lab dedicated to APIM is also available to discover the main capabilities of the Azure API Management Service : [Azure API Management Hands on Lab][hol-apim]
+> - You can find more information about APIM policies here:<br> > [Cache Lookup Policy][cache-lookup-policy]<br> > [Cache Store Policy][cache-store-policy]<br> > [Validate JWT][validate-jwt-policy]
+> - A lab dedicated to APIM is also available to discover the advanced capabilities of the Azure API Management Service : [Azure API Management Hands on Lab][hol-apim]
 
 </div>
 
@@ -720,8 +724,28 @@ Set the duration to `30` seconds for the cache to be able to test it and click *
 
 In real life scenario, this value will depend on your business needs.
 
-That's it! You now have your cache policy set up for all the operations of your API. The first call to an operation will cache the response of the API. From the next call, up to the retention delay (30 seconds in our scenario), the response will come from the cache directly, without hitting the backend API anymore, coming back way faster.
-You can now test it again with the `products.http` file, at least twice, and should see the response time of your API reduced to a few milliseconds from the second call!
+Next step is to implement the jwt validation policy.
+Add an **inbound policy** on `All operations` listed for the `Products` api in your API Management resource and select **validate-jwt**
+
+![APIM policy jwt](./assets/apim-policy-jwt.png)
+![APIM Policy jwt form](./assets/apim-policy-jwt-form.png)
+
+That's it! You now have your cache and OAuth autorization policy set up for all the operations of your API. The first call to an operation will cache the response of the API. From the next call, up to the retention delay (30 seconds in our scenario), the response will come from the cache directly, without hitting the backend API anymore, coming back way faster.
+
+To be authorized against the API, you will need to request an access-token to send in the Authorization Http header as defined in the `validate-jwt` policy earlier. A simple token will allow access to the api as no claim or audience is specified to be checked in the policy : It's basically just validating the request is given an access token the way the policy is configured.
+
+Use the following command to generate an access token for Redis (no matter what the content is, the policy is just going to validate a well formed access token is given):
+
+```bash
+az login --use-device-code
+
+az account get-access-token --scope https://redis.azure.com/.default --query "accessToken" -o tsv
+```
+
+Copy the result and paste it in the `http/products.http/@access-token` variable :
+![access token header](./assets/access-token-bearer.png)
+
+You can now test the `GET /products` endpoint with the `products.http` file, at least twice, and should see the response time of your API reduced to a few milliseconds from the second call
 
 </details>
 
@@ -814,6 +838,7 @@ APIM acting as a facade in front of the APIs even allows for implementing a cach
 [cache-store-policy]: https://learn.microsoft.com/en-us/azure/api-management/cache-store-policy
 [cache-lookup-value-policy]: https://learn.microsoft.com/en-us/azure/api-management/cache-lookup-value-policy
 [cache-store-value-policy]: https://learn.microsoft.com/en-us/azure/api-management/cache-store-value-policy
+[validate-jwt-policy]: https://learn.microsoft.com/en-us/azure/api-management/validate-jwt-policy
 [cache-invalidation]: https://redis.io/glossary/cache-invalidation/
 [hol-apim]: https://azure.github.io/apim-lab/
 
@@ -1288,11 +1313,19 @@ In this lab you will discover how to retrieve metrics and logs from Azure Manage
 
 ## Azure Monitor
 
-To simulate a real world scenario, the first thing to do is to generate some load on the Azure Managed Redis resource. To be able to do this, you will use the [RedisLabs/memtier_benchmark][redis-benchmark] tool as a docker image (Docker is already set up in the devcontainer/codespace).
+To simulate a real world scenario, the first thing to do is to generate some load on the Azure Managed Redis resource. To be able to do this, you already deployed an [Azure Load Testing][azure-load-testing] instance with the Infrastructure as Code executed earlier.
 
-RedisLabs Memtier_benchmark is a command-line utility designed to load test based on a default or custom load scenario.
+Azure Load Testing is a fully managed load-testing service that enables you to generate high-scale load. The service simulates traffic for your applications, regardless of where they're hosted. Developers, testers, and quality assurance (QA) engineers can use it to optimize application performance, scalability, or capacity. In this part of the lab, you will rely on the `URL based load test` module of the service that allows for quickly set up performance tests relying on an endpoint, an http verb and a small subset of configurations. Azure Load Testing also provides advanced load tests scenarios running [JMeter][jmeter] or [Locust][locust] scripts.
 
-To authenticate to your Azure Managed Redis resource you will need one of the access keys. Go to the your Azure Managed Redis resource and select the **Access Keys** panel, then copy the `Primary` or `Secondary` key.
+You will call the APIs developed in the earlier modules of the lab through API Management via and Azure Load Test. Azure Managed Redis will be used to serve the content of the cache via the API Management policy, increasing the traffic on Azure Managed Redis. This will help in generating usage metrics on the resource, used to determine the overall health of the service.
+
+![apim-subscription](image-1.png)
+
+Then show the keys and copy the primary one :
+
+![alt text](image-2.png)
+
+resource you will need one of the access keys. Go to the your Azure Managed Redis resource and select the **Access Keys** panel, then copy the `Primary` or `Secondary` key.
 
 Next, to generate some load on the Azure Managed Redis resource use the following command :
 
@@ -1392,10 +1425,12 @@ As a side note, we really encourage you to take the time to dig in the toolbox o
 
 [alert-rule-creation]: https://learn.microsoft.com/en-us/azure/azure-monitor/alerts/alerts-create-new-alert-rule?tabs=metric
 [action-group-creation]: https://learn.microsoft.com/en-us/azure/azure-monitor/alerts/action-groups#create-an-action-group-in-the-azure-portal
-[redis-benchmark]: (https://github.com/RedisLabs/memtier_benchmark)
+[redis-benchmark]: https://github.com/RedisLabs/memtier_benchmark
 [redis-dev-wrapper]: https://github.com/Azure/Microsoft.Azure.StackExchangeRedis/
-
----
+[jmeter]: https://jmeter.apache.org/usermanual/get-started.html
+[locust]: https://locust.io/
+[apim-hol]: https://azure.github.io/apim-lab/
+[azure-load-testing]: https://learn.microsoft.com/en-us/azure/app-testing/load-testing/overview-what-is-azure-load-testing
 
 # Closing the workshop
 

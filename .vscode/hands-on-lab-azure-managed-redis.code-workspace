@@ -29,7 +29,8 @@
     "debug.internalConsoleOptions": "neverOpen",
     "azurite.location": "/tmp",
     "omnisharp.autoStart": true,
-    "omnisharp.useModernNet": true
+    "omnisharp.useModernNet": true,
+    "powershell.cwd": "root"
   },
   "launch": {
     "version": "0.2.0",

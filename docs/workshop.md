@@ -706,7 +706,38 @@ API Management also offers a strict OAuth2 validation process where the JWT clai
 
 To be able to compare the performance of your API with and without the cache, you will first call it without the cache using the `products.http` inside the `http` folder.
 
-Now using the HTTP REST file for instance you should see the response time of your API taking a few seconds:
+You will start by adding the authorization policy to protect the access to the API. In the `Products/All Operations` view, click the **</>** buttin in the Inbound Processing Panel and add the following :
+
+```xml
+    <validate-jwt header-name="Authorization" failed-validation-httpcode="401">
+        <openid-config url="https://login.microsoftonline.com/<YOUR-TENANT-DOMAIN>/.well-known/openid-configuration" />
+    </validate-jwt>
+```
+
+Replace the `<YOUR-TENANT-DOMAIN>` value in the `<openid-config>` element with the result of the following command :
+
+```bash
+az account show --query "tenantDefaultDomain" -o tsv
+# It should look something like contoso.onmicrosoft.com
+```
+
+Your inbound policy should like this :
+![apim-jwt-policy](./assets/apim-jwt-policy.png)
+
+To be authorized against the API, you will need to request an access-token to send in the Authorization Http header as defined in the `validate-jwt` policy earlier. A simple token will allow access to the api as no claim or audience is to be validated specifically by the policy: It's basically just validating the request is given an access token.
+
+Use the following command to generate an access token for Redis (no matter what the content is, the policy is just going to validate a well formed access token is given):
+
+```bash
+az login --use-device-code --scope https://redis.azure.com/.default
+
+az account get-access-token --scope https://redis.azure.com/.default --query "accessToken" -o tsv
+```
+
+Copy the result and paste it in the `http/products.http/@access-token` variable :
+![access token header](./assets/access-token-bearer.png)
+
+You can now test the `GET /products` endpoint with the `products.http` file and you should see the response time of your API taking a few seconds:
 
 ![HTTP REST get products](./assets/apim-http-rest-before-caching.png)
 
@@ -724,28 +755,7 @@ Set the duration to `30` seconds for the cache to be able to test it and click *
 
 In real life scenario, this value will depend on your business needs.
 
-Next step is to implement the jwt validation policy.
-Add an **inbound policy** on `All operations` listed for the `Products` api in your API Management resource and select **validate-jwt**
-
-![APIM policy jwt](./assets/apim-policy-jwt.png)
-![APIM Policy jwt form](./assets/apim-policy-jwt-form.png)
-
-That's it! You now have your cache and OAuth autorization policy set up for all the operations of your API. The first call to an operation will cache the response of the API. From the next call, up to the retention delay (30 seconds in our scenario), the response will come from the cache directly, without hitting the backend API anymore, coming back way faster.
-
-To be authorized against the API, you will need to request an access-token to send in the Authorization Http header as defined in the `validate-jwt` policy earlier. A simple token will allow access to the api as no claim or audience is specified to be checked in the policy : It's basically just validating the request is given an access token the way the policy is configured.
-
-Use the following command to generate an access token for Redis (no matter what the content is, the policy is just going to validate a well formed access token is given):
-
-```bash
-az login --use-device-code
-
-az account get-access-token --scope https://redis.azure.com/.default --query "accessToken" -o tsv
-```
-
-Copy the result and paste it in the `http/products.http/@access-token` variable :
-![access token header](./assets/access-token-bearer.png)
-
-You can now test the `GET /products` endpoint with the `products.http` file, at least twice, and should see the response time of your API reduced to a few milliseconds from the second call
+That's it! You now have your cache and OAuth autorization policy set up for all the operations of your API. The first call to an operation will cache the response of the API. From the next call, up to the retention delay (30 seconds in our scenario), the response will come from the cache directly, without hitting the backend API anymore, coming back way faster. Send another request to the same endpoint a few times to see the impact of caching the results of the API with Redis.
 
 </details>
 
@@ -1319,7 +1329,7 @@ Azure Load Testing is a fully managed load-testing service that enables you to g
 
 You will call the APIs developed in the earlier modules of the lab through API Management via and Azure Load Test. Azure Managed Redis will be used to serve the content of the cache via the API Management policy, increasing the traffic on Azure Managed Redis. This will help in generating usage metrics on the resource, used to determine the overall health of the service.
 
-![apim-subscription](image-1.png)
+![apim-subscription](./assets/apim-jwt-policy.png)
 
 Then show the keys and copy the primary one :
 

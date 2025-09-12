@@ -728,7 +728,7 @@ To be authorized against the API, you will need to request an access-token to se
 Use the following command to generate an access token for Redis (no matter what the content is, the policy is just going to validate a well formed access token is given):
 
 ```bash
-az login --use-device-code
+az login --use-device-code --scope https://redis.azure.com/.default
 
 az account get-access-token --scope https://redis.azure.com/.default --query "accessToken" -o tsv
 ```

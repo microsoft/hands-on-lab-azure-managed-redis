@@ -697,7 +697,8 @@ API Management also offers a strict OAuth2 validation process where the JWT clai
 
 To be able to compare the performance of your API with and without the cache, you will first call it without the cache using the `products.http` inside the `http` folder.
 
-You will start by adding the authorization policy to protect the access to the API. In the `Products/All Operations` view, click the **</>** buttin in the Inbound Processing Panel and add the following :
+You will start by adding the authorization policy to protect the access to the API. In the `Products/All Operations` view, click the **</>** button in the Inbound Processing Panel and add the following :
+![apim-policy-manual](./assets/apim-policy-manual.png)
 
 ```xml
     <validate-jwt header-name="Authorization" failed-validation-httpcode="401">
@@ -1314,31 +1315,46 @@ In this lab you will discover how to retrieve metrics and logs from Azure Manage
 
 ## Azure Monitor
 
-To simulate a real world scenario, the first thing to do is to generate some load on the Azure Managed Redis resource. To be able to do this, you already deployed an [Azure Load Testing][azure-load-testing] instance with the Infrastructure as Code executed earlier.
+To simulate a real world scenario, the first thing to do is to generate some load on the Azure Managed Redis resource. To be able to do this, you already deployed an [Azure Load Testing][azure-load-testing] instance with the Infrastructure as Code executed in Lab 1.
 
-Azure Load Testing is a fully managed load-testing service that enables you to generate high-scale load. The service simulates traffic for your applications, regardless of where they're hosted. Developers, testers, and quality assurance (QA) engineers can use it to optimize application performance, scalability, or capacity. In this part of the lab, you will rely on the `URL based load test` module of the service that allows for quickly set up performance tests relying on an endpoint, an http verb and a small subset of configurations. Azure Load Testing also provides advanced load tests scenarios running [JMeter][jmeter] or [Locust][locust] scripts.
+Azure Load Testing is a fully managed service that enables you to generate high-scale load. It simulates traffic for your applications, regardless of where they are hosted. Developers, testers, and quality assurance (QA) engineers can use it to optimize application performance, scalability, and capacity planning. In this part of the lab, you'll use the `URL-based load test` module to quickly set up performance tests against a target endpoint using an HTTP verb and a small set of configuration options. Azure Load Testing also supports more advanced load-testing scenarios with [JMeter][jmeter] or [Locust][locust] scripts.
 
 You will call the APIs developed in the earlier modules of the lab through API Management via and Azure Load Test. Azure Managed Redis will be used to serve the content of the cache via the API Management policy, increasing the traffic on Azure Managed Redis. This will help in generating usage metrics on the resource, used to determine the overall health of the service.
 
-![apim-subscription](./assets/apim-jwt-policy.png)
+<div class="task" data-title="Task">
 
-Then show the keys and copy the primary one :
+> - Create a `URL-based Load Test` configuration in the Azure Load Test instance with `50` vusers for `5` minutes
+> - Set a secret parameter for the Authorization header to be filled during test start
+> - Start a new load test during 5 minutes to analyze the impact of this load on the Redis usage and eviction metrics
 
-![alt text](image-2.png)
+</div>
 
-resource you will need one of the access keys. Go to the your Azure Managed Redis resource and select the **Access Keys** panel, then copy the `Primary` or `Secondary` key.
+<details>
 
-Next, to generate some load on the Azure Managed Redis resource use the following command :
+<summary>📚 Toggle solution</summary>
 
-```bash
-docker run --rm redislabs/memtier_benchmark:latest -h <YOUR_REDIS_RESOURCE_NAME>.redis.cache.windows.net -p 6380 -a <YOUR_REDIS_ACCESS_KEY> --tls --tls-skip-verify
-```
+Start by selecting the Azure Load Test instance in your resource group and click **Create a URL-based test** in the `Tests > Tests` panel :
 
-Redis Benchmark will send a few million queries (SET and GET) each from various parallel client connections. In this lab's use case, the duration of the operation will mainly be influenced by the codespace/dev environment CPU, RAM and network bandwidth resources.
+![load-test-create](./assets/load-test-create.png)
 
-When the benchmark is done, you should see the following results table (latency will depend on the benchmark's source location):
+> - Create a Load test named `Products_Api` and **Add Request** in the `Test Plan` tab.
+> - Create a request named `Products` and set the **URL** of the operation exposed via APIM (which should look like `https://apim-lab-....azure-api.net/products`), and leave the HTTP Method to `GET`.
+> - In the **Headers** tab set a Header named `Authorization` and set the value to `${access-token}` :
 
-![Redis-Benchmark-results](./assets/redis-benchmark-results.png)
+![load-test-request](./assets/load-test-request)
+
+</details>
+
+<div class="tip" data-title="Tips">
+
+> Other performance testing tools specifically designed for Redis benchmarking exist, such as [redislab/memtier_benchmark][memtier-benchmark] and [redis-benchmark][redis-benchmark].
+> These utilities exercise your Redis deployment in isolation under expected load profiles to surface Redis‑specific latency or throughput bottlenecks.
+> Explore redis performance testing recommandations in the article [here][redis-perf-tools]
+>
+> However, you should also performance test the end‑to‑end (E2E) application to uncover constraints elsewhere in the stack that only appear under production‑like traffic patterns.
+> Platform services like [Azure Load Testing][azure-load-testing] provide capabilities to correlate high load with request success rate, latency, and underlying infrastructure saturation for a holistic view.
+
+</div>
 
 About 5 minutes after the benchmark has successfully ended, open the Azure Portal view on your Azure Managed Redis resource and open the **Insights** panel to gain deeper knowledge of the resource health :
 
@@ -1426,12 +1442,14 @@ As a side note, we really encourage you to take the time to dig in the toolbox o
 
 [alert-rule-creation]: https://learn.microsoft.com/en-us/azure/azure-monitor/alerts/alerts-create-new-alert-rule?tabs=metric
 [action-group-creation]: https://learn.microsoft.com/en-us/azure/azure-monitor/alerts/action-groups#create-an-action-group-in-the-azure-portal
-[redis-benchmark]: https://github.com/RedisLabs/memtier_benchmark
+[memtier-benchmark]: https://github.com/redislabs/memtier_benchmark
+[redis-benchmark]: https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/benchmarks/
 [redis-dev-wrapper]: https://github.com/Azure/Microsoft.Azure.StackExchangeRedis/
 [jmeter]: https://jmeter.apache.org/usermanual/get-started.html
 [locust]: https://locust.io/
 [apim-hol]: https://azure.github.io/apim-lab/
 [azure-load-testing]: https://learn.microsoft.com/en-us/azure/app-testing/load-testing/overview-what-is-azure-load-testing
+[redis-perf-tools]: https://docs.azure.cn/en-us/redis/best-practices-performance
 
 # Closing the workshop
 

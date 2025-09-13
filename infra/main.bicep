@@ -321,6 +321,15 @@ module appService './modules/host/appservice.bicep' = {
   }
 }
 
+module productsApi './modules/apis/api.bicep' = {
+  name: 'productsApi'
+  scope: resourceGroup
+  params: {
+    apimName: apim.outputs.name
+    serviceUrl: appService.outputs.uri
+  }
+}
+
 module roles './modules/security/roles.bicep' = {
   name: 'roles'
   scope: resourceGroup

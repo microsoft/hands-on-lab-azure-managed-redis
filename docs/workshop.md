@@ -292,7 +292,11 @@ One tier stores data both in-memory and on-disk:
 
 ### Interact with Azure Managed Redis
 
-Let's see quickly how to interact with Azure Managed Redis. First, let's open your terminal (Ctrl + J) and run the following command to get an access token to connect to your Azure Managed Redis instance using the right scope:
+Let's see quickly how to interact with Azure Managed Redis. 
+
+![Lab scope](./assets/architecture-lab-1.png)
+
+First, let's open your terminal (Ctrl + J) and run the following command to get an access token to connect to your Azure Managed Redis instance using the right scope:
 
 ```bash
 TOKEN=$(az account get-access-token --scope https://redis.azure.com/.default --query "accessToken" -o tsv)
@@ -380,7 +384,11 @@ The following commands are the most basic one to interact with Redis:
 
 # Lab 2 : Use Azure Managed Redis in your API
 
-In this lab, you will see how to use Azure Managed Redis in your API to improve its performance. This API is an ASP.NET Web API written in .NET 8 and you will use the [StackExchange.Redis][stackexchange-redis] NuGet package to interact with Redis. One of the goal of this API is to provide a list of products that you will display in a web application.
+In this lab, you will see how to use Azure Managed Redis in your API to improve its performance. The scope of the lab will be:
+
+![Lab scope](./assets/architecture-lab-2.png)
+
+ This API is an ASP.NET Core Web API written in .NET 8 and you will use the [StackExchange.Redis][stackexchange-redis] NuGet package to interact with Redis. One of the goal of this API is to provide a list of products that you will display in a web application.
 
 <div class="tip" data-title="Tips">
 
@@ -398,7 +406,7 @@ In this lab, you will see how to use Azure Managed Redis in your API to improve 
 > Between the performance optimizations at a Serverless Azure Cosmos DB Instance doors, the scenario with a single user calling the API combined with such a small volume of `products` data persisted in Azure Cosmos DB, the end to end API response time discrepancy between Azure Managed Redis and Cosmos DB can be reduced.
 >
 > To clearly identify calls' response with or without cache, you'll add an artificial high latency while interacting with Azure Cosmos DB .
-> To do so, you'll find an environment variable in appsettings.json.template named `SIMULATED_DB_LATENCY_IN_SECONDS` that you'll have to fill in : The rest of the application code is ready to take this value into account.
+> To do so, you'll find an environment variable named `SIMULATED_DB_LATENCY_IN_SECONDS` in the `src/catalog-api` folder inside the `appsettings.json.template` file that you'll have to fill in : The rest of the application code is ready to take this value into account.
 
 </div>
 
@@ -411,7 +419,7 @@ Once duplicated, you will need to fill in the missing values in this new file to
 
 <div class="task" data-title="Task">
 
-> - Set the Azure Cosmos DB Ednpoint in the `appsettings.Development.json` file
+> - Set the Azure Cosmos DB Endpoint in the `appsettings.Development.json` file
 > - Set the Redis Endpoint in the `appsettings.Development.json` file (in preparation for the next lab)
 > - Set `SIMULATED_DB_LATENCY_IN_SECONDS` to `"1"`
 > - Run the API in your devcontainer or using the provided GitHub Codespace.
@@ -423,18 +431,18 @@ Once duplicated, you will need to fill in the missing values in this new file to
 
 <summary>📚 Toggle solution</summary>
 
-Start by duplicating the `appsettings.json.template` from Visual Studio Code file explorer to `appsettings.Development.json` OR by running the following command :
+Start by duplicating the `appsettings.json.template` from Visual Studio Code file explorer to `appsettings.Development.json` **OR** by running the following command :
 
 ```bash
 cd src/catalog-api
 cp appsettings.json.template appsettings.Development.json
 ```
 
-Inside the Azure Portal, go to your resource group, search for the Azure Cosmos DBaccount, select it and in the left menu, click on **Keys**. Then copy the **URI** and replace `"AZURE_COSMOSDB_ENDPOINT"` value in `appsettings.Development.json` :
+Inside the Azure Portal, go to your resource group, search for the Azure Cosmos DB account, select it and in the left menu, click on **Overview**. Then copy the **URI** and replace `"YOUR_COSMOS_ENDPOINT"` value in `appsettings.Development.json` :
 
 ![Cosmos DB Endpoint](./assets/cosmos-db-endpoint.png)
 
-Then inside the Azure Portal, go to your resource group, search the Azure Managed Redis instance, then copy the **Endpoint** value and replace `"AZURE_REDIS_ENDPOINT"` value in the `appsettings.Development.json` file :
+Then inside the Azure Portal, go to your resource group, search the Azure Managed Redis instance, then copy the **Endpoint** value and replace `"YOUR_REDIS_ENDPOINT"` value in the `appsettings.Development.json` file :
 
 ![Azure Managed Redis Endpoint](./assets/amr-endpoint.png)
 
@@ -462,6 +470,8 @@ Depending on the environment you are using :
 - Devcontainer :
   - Once the API is running, browse for the url: http://localhost:5076/products and you should see the list of products.
 
+Because of the role assignments made during the infrastructure deployment, the API uses your user identity to connect to Azure Cosmos DB.
+
 </details>
 
 ## Add caching to your API
@@ -479,7 +489,7 @@ They both use the `IRedisService` interface to interact with the cache and use t
 <div class="tip" data-title="Tips">
 
 > These Get & Set Async methods have been built specifically for this lab to simplify exception handling and serialization as much as possible in your interaction with Azure Managed Redis.
-> However, the actual Get and Set queries sent to the Redis Cache reside in the simple methods provided by the StackExchange.Redis package, and that you can see in the `RedisService.cs` class as the extract below :
+> However, the actual Get and Set queries sent to the Redis Cache reside in the simple methods provided by the StackExchange.Redis package, that you can see in the `RedisService.cs` class as the extract below :
 >
 > ```csharp
 > await database.StringGetAsync(key);
@@ -515,7 +525,7 @@ if (cachedProducts != null) {
 }
 ```
 
-If no product is found in the cache, fetch the data from Azure Cosmos DBand store them in the cache before returning them:
+If no product is found in the cache, fetch the data from Azure Cosmos DB and store them in the cache before returning them:
 
 ```csharp
 // Fetch data from Cosmos DB
@@ -560,13 +570,13 @@ Thanks Redis! ;)
 
 ## Deploy the API to Azure
 
-Now that you have your API working locally, you will deploy it to Azure. To do this, you will use the Azure App Service provided by the Terraform infrastructure as code applied earlier. This service allows you to host your APIs and Web Apps in the cloud.
+Now that you have your API working locally, you will deploy it to Azure. To do this, you will use the Azure App Service provided by the infrastructure as code (using Bicep) applied earlier. This service allows you to host your APIs and Web Apps in the cloud.
 
 All the environment variables such as the endpoints to Azure Managed Redis and Azure Cosmos DB were already configured in the Azure App Service for you by the infrastructure as code.
 
 <div class="task" data-title="Tasks">
 
-> - Execute the azd deploy command for the catalog-api only.
+> - Execute the `azd deploy` command for the catalog-api only.
 > - Test the `/products` endpoint of the api hosted in the Azure App Service Resource
 
 </div>
@@ -574,13 +584,13 @@ All the environment variables such as the endpoints to Azure Managed Redis and A
 <details>
 <summary>📚 Toggle solution</summary>
 
-To deploy your API directly to the Azure App Service resource, you will use the `azd deploy` command from the terminal (Ctrl+J to open the terminal if closed) and test the `/products` api endpoint.
+To deploy your API directly to the Azure App Service resource, you will use the `azd deploy` command from the terminal (Ctrl+J to open the terminal if closed) and from the root folder of the repository execute the folowing command:
 
 ```bash
 azd deploy catalog-api
 ```
 
-Once the api is deployed, we will test it against the `/products` endpoint. To do so, use the `catalog.http` file saved in the `http` folder and click on the `Send request` link above the `Lab 2 - Test the Catalog API` request :
+Once the api is deployed, you will test it against the `/products` endpoint. To do so, use the `catalog.http` file saved in the `http` folder and click on the `Send request` link above the `Lab 2 - Test the Catalog API` request :
 
 ![Test Catalog API](assets/http-catalog-api.png)
 
@@ -599,12 +609,12 @@ This panel shows the result of the `/products` GET request, as well as the time 
 
 </div>
 
-You now have an API running in Azure App Service that is able to test the impact of a caching system by switching the following environment variables :
+You now have an API running in Azure App Service that is able to test the impact of a caching system by switching the following environment variables inside the Azure App Service resource, in the **Settings** > **Environment variables** menu:
 
-- SIMULATED_DB_LATENCY_IN_SECONDS : Integer value voluntarily increasing the delay before responding from database to help identifying a response coming from the cache or the database
-- PRODUCT_LIST_CACHE_DISABLE : 0 (Enable) and 1(Disable) the Redis caching system for steps in the lab.
+- `SIMULATED_DB_LATENCY_IN_SECONDS` : Integer value voluntarily increasing the delay before responding from database to help identifying a response coming from the cache or the database
+- `PRODUCT_LIST_CACHE_DISABLE` : 0 (Enable) and 1(Disable) the Redis caching system for steps in the lab.
 
-[redis-dev-clients]: https://redis.io/docs/clients/
+[redis-dev-clients]: https://redis.io/docs/latest/develop/clients/
 [stackexchange-redis]: https://www.nuget.org/packages/StackExchange.Redis
 
 ---

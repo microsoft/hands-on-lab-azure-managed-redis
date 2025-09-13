@@ -5,25 +5,41 @@
       "name": "root"
     },
     {
+      "path": "../.azure",
+      "name": ".azure"
+    },
+    {
+      "path": "../.devcontainer",
+      "name": ".devcontainer"
+    },
+    {
+      "path": "../.vscode",
+      "name": ".vscode"
+    },
+    {
       "path": "../docs",
-      "name": "Docs"
+      "name": "docs"
+    },
+    {
+      "path": "../http",
+      "name": "http"
     },
     {
       "path": "../infra",
-      "name": "Infra"
+      "name": "infra"
     },
     {
       "path": "../src/catalog-api",
-      "name": "Web App - Catalog API"
+      "name": "src/catalog-api"
     },
     {
       "path": "../src/cache-refresh-func",
-      "name": "Function - Cache Refresh"
+      "name": "src/cache-refresh-func"
     },
     {
       "path": "../src/history-func",
-      "name": "Function - History Func"
-    }
+      "name": "src/history-func"
+    },
   ],
   "settings": {
     "debug.internalConsoleOptions": "neverOpen",
@@ -38,7 +54,10 @@
     "compounds": [
       {
         "name": "Attach API + Az Func",
-        "configurations": [".NET Core Attach", "Attach to .NET Functions"]
+        "configurations": [
+          ".NET Core Attach",
+          "Attach to .NET Functions"
+        ]
       }
     ]
   }

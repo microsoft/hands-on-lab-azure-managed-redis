@@ -627,16 +627,16 @@ In the previous lab, you saw how to add code in your API to be able to use an Az
 
 If you look at the architecture that you deployed for this workshop, remember that you have an API Management (APIM) in front of the API that provide you the different products.
 
-![Architecture reminder](./assets/architecture.png)
+![Architecture reminder](./assets/architecture-lab-3.png)
 
-APIM is used as a facade for all your APIs (in this case you only have one), in the next section you will discover how to add a cache on your APIs using the APIM and Azure Managed Redis.
+APIM is used as a facade for all your APIs (in this case you only have one called *Products* inside APIM), in the next section you will discover how to add a cache on your APIs using the APIM and Azure Managed Redis.
 
 ## Disabling cache in your API
 
 In the previous lab, you added code in your API to use an Azure Managed Redis directly on the `/products` endpoint. To avoid modifying the code of your API, we have added an environment variable called `PRODUCT_LIST_CACHE_DISABLE` that you can use to enable or disable the cache on this endpoint.
 
 To disable the cache, you need to set the value of this environment variable to `1`. To do this, go to your resource group, search the App service, select it and in the left menu, click on **Environment variables**.
-You will see the `PRODUCT_LIST_CACHE_DISABLE` environment variable, select the edit button:
+You will see the `PRODUCT_LIST_CACHE_DISABLE` environment variable, click on it:
 
 ![App service configuration](./assets/app-service-configuration.png)
 
@@ -697,16 +697,16 @@ API Management also offers a strict OAuth2 validation process where the JWT clai
 
 <div class="task" data-title="Tasks">
 
+> - Protect your `Products` API inside APIM by adding an Authorization HTTP header with a Bearer token. Using the `validate-jwt` policy in APIM to secure access to the products API. By doing so, you will be able to test securely the API from the `products.http` file.
 > - Using the interface add the policies `cache-lookup` and `cache-store` to cache all the operations of your API
 > - Set the duration to `30` seconds for the cache to be able to test it
-> - Implement a basic jwt validation policy to secure the access to your `products` api
 > - Test the `Get Products` api twice to validate the impact of caching the results
 
 </div>
 
 <div class="tip" data-title="Tips">
 
-> - You can find more information about APIM policies here:<br> > [Cache Lookup Policy][cache-lookup-policy]<br> > [Cache Store Policy][cache-store-policy]<br> > [Validate JWT][validate-jwt-policy]
+> - You can find more information about APIM policies here:<br> > [Validate JWT][validate-jwt-policy]<br> > [Cache Lookup Policy][cache-lookup-policy]<br> > [Cache Store Policy][cache-store-policy]
 > - A lab dedicated to APIM is also available to discover the advanced capabilities of the Azure API Management Service : [Azure API Management Hands on Lab][hol-apim]
 
 </div>
@@ -716,12 +716,12 @@ API Management also offers a strict OAuth2 validation process where the JWT clai
 
 To be able to compare the performance of your API with and without the cache, you will first call it without the cache using the `products.http` inside the `http` folder.
 
-You will start by adding the authorization policy to protect the access to the API. In the `Products/All Operations` view, click the **</>** buttin in the Inbound Processing Panel and add the following :
+You will start by adding the authorization policy to protect the access to the API. In the `Products/All Operations` view of your APIM instance, click the **</>** button in the **Inbound** Processing Panel and add the following after the `<base />` tag in the `<inbound>` block:
 
 ```xml
-    <validate-jwt header-name="Authorization" failed-validation-httpcode="401">
-        <openid-config url="https://login.microsoftonline.com/<YOUR-TENANT-DOMAIN>/.well-known/openid-configuration" />
-    </validate-jwt>
+<validate-jwt header-name="Authorization" failed-validation-httpcode="401">
+    <openid-config url="https://login.microsoftonline.com/<YOUR-TENANT-DOMAIN>/.well-known/openid-configuration" />
+</validate-jwt>
 ```
 
 Replace the `<YOUR-TENANT-DOMAIN>` value in the `<openid-config>` element with the result of the following command :
@@ -731,17 +731,15 @@ az account show --query "tenantDefaultDomain" -o tsv
 # It should look something like contoso.onmicrosoft.com
 ```
 
-Your inbound policy should like this :
+Your inbound policy should look like this :
 ![apim-jwt-policy](./assets/apim-jwt-policy.png)
 
-To be authorized against the API, you will need to request an access-token to send in the Authorization Http header as defined in the `validate-jwt` policy earlier. A simple token will allow access to the api as no claim or audience is to be validated specifically by the policy: It's basically just validating the request is given an access token.
+To be authorized against the API, you will need to request an access-token to send in the Authorization Http header as defined in the `validate-jwt` policy earlier. A simple token will allow access to the api as no claim or audience is to be validated specifically by the policy: It's basically just validating the request is given an access token from the same tenant as the one defined in the policy.
 
-Use the following command to generate an access token for Redis (no matter what the content is, the policy is just going to validate a well formed access token is given):
+Use the following command to generate an access token for you (no matter what the content is, the policy is just going to validate a well formed access token is given from the right tenant):
 
 ```bash
-az login --use-device-code --scope https://redis.azure.com/.default
-
-az account get-access-token --scope https://redis.azure.com/.default --query "accessToken" -o tsv
+az account get-access-token --query "accessToken" -o tsv
 ```
 
 Copy the result and paste it in the `http/products.http/@access-token` variable :

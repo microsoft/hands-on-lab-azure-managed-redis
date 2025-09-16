@@ -7,6 +7,12 @@ using Microsoft.Azure.Functions.Worker.Extensions.Redis;
 using Microsoft.Extensions.Logging;
 
 namespace Func.RedisCache.Products;
+
+public class EntryExpirationEvent
+{
+    public string Message { get; set; }
+}
+
 public class RefreshProductsCache
 {
     private readonly ILogger _logger;
@@ -23,15 +29,17 @@ public class RefreshProductsCache
     [Description("This function will be triggered when the EXPIRED command is executed at monitored key's expiry.")]
     [Function("ProductsEvents")]
     public async Task ProductsEventsTrigger(
-        [RedisPubSubTrigger("AZURE_REDIS_CONNECTION", "__keyevent@0__:expired")] string key)
+        [RedisPubSubTrigger("AZURE_REDIS_CONNECTION", "__keyevent@0__:expired")] EntryExpirationEvent expirationEvent)
     {
+        string key = expirationEvent.Message;
+
         if (key.Contains(Const.REDIS_KEY_PRODUCTS_ALL))
         {
             _logger.LogInformation($"{key} just EXPIRED");
 
             //Fire and forget : Calling APIM to request fresh product catalog from data source after cache expired
             await _httpCatalogApiClient.GetStringAsync("products");
-            
+
             _logger.LogInformation($"called APIM to force Redis refresh key '{key}' with fresh product catalog from data source.");
         }
     }

@@ -158,7 +158,6 @@ module cacheFunction './modules/host/function.bicep' = {
     applicationInsightsName: applicationInsights.outputs.name
     userAssignedIdentityId: cacheFunctionIdentity.outputs.id
     storageAccountName: storageAccountFunctions.outputs.name
-    deploymentStorageContainerName: cacheDeploymentPackageContainerName
     azdServiceName: 'cache-refresh'
     tags: tags
     appSettings: [
@@ -176,7 +175,7 @@ module cacheFunction './modules/host/function.bicep' = {
       }
       {
         name  : 'AZURE_REDIS_CONNECTION__redisHostName'
-        value : managedRedis.outputs.hostName
+        value : managedRedis.outputs.endpoint
       }
       {
         name  : 'AZURE_REDIS_CONNECTION__principalId'
@@ -209,7 +208,6 @@ module historyFunction './modules/host/function.bicep' = {
     location: location
     applicationInsightsName: applicationInsights.outputs.name
     storageAccountName: storageAccountFunctions.outputs.name
-    deploymentStorageContainerName: historyDeploymentPackageContainerName
     azdServiceName: 'history'
     tags: tags
     appSettings: [
@@ -219,7 +217,7 @@ module historyFunction './modules/host/function.bicep' = {
       }
       {
         name  : 'AZURE_REDIS_CONNECTION__redisHostName'
-        value : managedRedis.outputs.hostName
+        value : managedRedis.outputs.endpoint
       }
       {
         name  : 'AZURE_REDIS_CONNECTION__principalId'

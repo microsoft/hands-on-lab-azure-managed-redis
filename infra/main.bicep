@@ -207,6 +207,7 @@ module historyFunction './modules/host/function.bicep' = {
     appName: 'func-hist-${resourceSuffixKebabcase}'
     location: location
     applicationInsightsName: applicationInsights.outputs.name
+    userAssignedIdentityId: historyFunctionIdentity.outputs.id
     storageAccountName: storageAccountFunctions.outputs.name
     azdServiceName: 'history'
     tags: tags

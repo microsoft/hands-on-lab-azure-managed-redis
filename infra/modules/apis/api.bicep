@@ -38,5 +38,30 @@ resource getProductsOperation 'Microsoft.ApiManagement/service/apis/operations@2
   }
 }
 
+resource getProductOperation 'Microsoft.ApiManagement/service/apis/operations@2024-06-01-preview' = {
+  parent: productsApi
+  name: 'get-product-by-id'
+  properties: {
+    displayName: 'Get Product by ID'
+    method: 'GET'
+    urlTemplate: '/products/{id}'
+    description: 'Get a product by its ID.'
+    templateParameters: [
+      {
+        name: 'id'
+        description: 'The ID of the product to retrieve.'
+        type: 'string'
+        required: true
+      }
+    ]
+    responses: [
+      {
+        statusCode: 200
+        description: 'Success'
+      }
+    ]
+  }
+}
+
 output apiId string = productsApi.id
 output apiName string = productsApi.name

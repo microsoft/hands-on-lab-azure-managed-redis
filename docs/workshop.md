@@ -1078,7 +1078,7 @@ Now if you go to your Azure Function resource, in the **Overview** tab select yo
 
 Do a few calls like you did in the APIM lab to set a value in the cache with your `products.http` file and then inside the **Monitor** tab you should see that the function was triggered when the key `products:all` is expired (it can take up to 5 minutes to appear):
 
-![Azure Function logs](./assets/azure-function-logs.png)
+![Azure Function logs](./assets/azure-function-cache-detail.png)
 
 You now have an Azure Function that is triggered every time the key `products:all` is expired and refresh the cache.
 
@@ -1096,35 +1096,38 @@ The following sequence diagram illustrates how `history-func` gets data updates 
 
 First thing first, let's take a look at the Streams currently available on your Azure Managed Redis instance.
 
-The goal is to locate the [Redis Stream][redis-streams] in which the `catalog-api` is adding new items whenever a user views a product. Afterwards you need to inspect that stream and take a look at the events/items added to it.
+The goal is to locate the Redis Stream in which the `catalog-api` is adding new items whenever a user views a product. Afterwards you need to inspect that stream and take a look at the events/items added to it.
 
-To do this, there is a variety of tools that you can use to inspect Redis data like the integrated [Redis Console][redis-console] and also the fully-featured GUI [RedisInsight][redis-insight].
+To do this, there is a variety of tools that you can use to inspect Redis data like the integrated Redis CLI and also the fully-featured GUI [RedisInsight][redis-insight].
 
 <div class="task" data-title="Task">
 
-> - View some products in the Web App to generate items in the stream. You can alternatively call the `/products/:id` endpoint from `catalog-api` like you did in Lab 2.
 > - Locate the stream where `catalog-api` publishes product viewing events, named `productViews`.
-> - Inspect the items in the Stream using `Redis Console` from the Azure portal.
-> - View more products in the Web App and make sure new items get added in the stream.
-
-</div>
-
-<div class="tip" data-title="Tips">
-
-> - [Redis Console][redis-console]
-> - [SCAN command][redis-scan-command]
-> - [XRANGE command][redis-xrange-command]
+> - Inspect the items in the Stream using the `Redis CLI` from the Azure portal.
+> - Call more products in the product api and make sure new items get added in the stream.
 
 </div>
 
 <details>
 <summary>📚 Toggle solution</summary>
 
-Open the [Redis Console][redis-console] of your Azure Managed Redis instance.
-
-![Azure Managed Redis Console](./assets/azure-cache-for-redis-console.png)
+Open a terminal and connect to your Azure Managed Redis using the Redis CLI like you did in the previous lab.
 
 Then use the [SCAN command][redis-scan-command] to list all keys having a type `stream`:
+
+```sh
+SCAN 0 TYPE stream
+```
+
+If you run it directly, you will see that there is no stream:
+
+![No streams in Redis](./assets/azure-managed-redis-no-stream.png)
+
+To be able to load some streams you need to simulate a user viewing products. To do this, you can use the `http/product.http` file and call the `/products/{id}` endpoint a few times with different product IDs.
+
+To get a product ID, you can call the `/products` endpoint using `http/products.http` and copy one of the IDs from the response.
+
+Now if you rerun the `SCAN` command again, you should see a stream called `productViews`:
 
 ```sh
 SCAN 0 TYPE stream
@@ -1150,10 +1153,6 @@ You should be able to see the following item fields:
 - `date`: The time (in ISO 8601) at which the product was viewed
 </details>
 
-[redis-streams]: https://redis.io/docs/data-types/streams/
-[redis-console]: https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-configure#redis-console
-[redis-scan-command]: https://redis.io/commands/scan/
-[redis-xrange-command]: https://redis.io/commands/xrange/#--and--special-ids
 [redis-insight]: https://redis.com/redis-enterprise/redis-insight/
 
 ### Consuming product views' stream using Azure Functions

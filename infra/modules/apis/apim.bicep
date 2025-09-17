@@ -1,6 +1,6 @@
 param name string
 param location string = resourceGroup().location
-param skuName string = 'Standardv2'
+param skuName string = 'Basicv2'
 param tags object = {}
 
 resource apim 'Microsoft.ApiManagement/service@2024-06-01-preview' = {

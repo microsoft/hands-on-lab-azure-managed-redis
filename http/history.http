@@ -1,0 +1,7 @@
+@historyFunction =  <YOUR_FUNCTION_URL_HERE>
+@typeJson = Accept: application/json
+
+###
+GET {{historyFunction}}
+{{typeJson}}
+X-USER-ID: 12345

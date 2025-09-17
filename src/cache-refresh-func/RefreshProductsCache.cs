@@ -7,6 +7,12 @@ using Microsoft.Azure.Functions.Worker.Extensions.Redis;
 using Microsoft.Extensions.Logging;
 
 namespace Func.RedisCache.Products;
+
+public class EntryExpirationEvent
+{
+    public string Message { get; set; }
+}
+
 public class RefreshProductsCache
 {
     private readonly ILogger _logger;
@@ -23,8 +29,10 @@ public class RefreshProductsCache
     [Description("This function will be triggered when the EXPIRED command is executed at monitored key's expiry.")]
     [Function("ProductsEvents")]
     public async Task ProductsEventsTrigger(
-        [RedisPubSubTrigger("TO_DEFINE", "TO_DEFINE")] string key)
+        [RedisPubSubTrigger("TO_DEFINE", "TO_DEFINE")] EntryExpirationEvent expirationEvent)
     {
+        string key = expirationEvent.Message;
+
         // TODO: Implement the logic to refresh the cache
     }
 }

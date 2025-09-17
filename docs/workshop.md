@@ -1158,97 +1158,6 @@ Azure Function can automatically resolve the value of the environment variables 
 
 </details>
 
-### Testing the function locally
-
-Next, you need to ensure that your Azure Function works as expected and manages to process new events.
-
-To do this, make sure that you have a `local.settings.json` file (a template is available in `src/history-func/local.settings.json.template`), run the function locally, then view a new product in the web app and make sure that you see a new event being processed in the Azure Function.
-
-<div class="task" data-title="Task">
-
-> Run the `src/history-func` Azure Function locally and ensure it gets triggered whenever you view new products in the Web App
-
-</div>
-
-<div class="tip" data-title="Tips">
-
-> - Use a different port for this Azure Function (e.g. 7072) as the default port may already be used by the `catalog-api` or another Azure Function.
-> - You can use [func start -p 7072][func-start] to listen on port 7072
-
-</div>
-
-<details>
-<summary>📚 Toggle solution</summary>
-
-First, you will start by creating a new `local.settings.json` file.
-
-```sh
-# Go to the root of the history-func Function App
-cd src/history-func
-
-# Create a local.settings.json file from the template
-cp local.settings.json.template local.settings.json
-```
-
-Then you need to update the value of `AZURE_REDIS_CONNECTION` that you can retrieve in your redis instance:
-
-![Azure Managed Redis connection string][azure-cache-for-redis-connection-string]
-
-Now that you have the required config, you can run the function:
-
-```sh
-# Load all dependencies
-dotnet restore
-
-# Start the Function App
-func start -p 7072
-```
-
-Once it starts, you can browse the Web App and ensure new product views' event processing logs appear on your terminal:
-
-![Logs of processing productViews stream](./assets/history-func-processed-event-logs.png)
-
-</details>
-
-### Retrieving user browsing history using an HTTP endpoint
-
-Lastly, let's check the HTTP endpoint of `history-func` and ensure that it returns all browsing history for a given user.
-
-<div class="task" data-title="Task">
-
-> Call the `/api/history` endpoint and ensure it returns the latest products that you have viewed on the Web App
-
-</div>
-
-<div class="tip" data-title="Tips">
-
-> The `/api/history` is expecting the user ID to be passed in the `X-USER-ID` header, you can get the user ID from the Web App in the top right corner.
-
-</div>
-
-<details>
-<summary>📚 Toggle solution</summary>
-
-As the Azure Function is already up and running, you can directly call the `/api/history` endpoint with a GET request and ensure the ID of the user for whom you want to get the history is defined in the `X-USER-ID` header.
-
-![WebApp User ID](./assets/webapp-user-id.png)
-
-Before calling the endpoint, make sure to get a User ID by copying the UUID that you see on the top right of the Web App. You can also get it from the field `userId` in the stream data items.
-
-So the final request should look like this:
-
-<!-- TODO: Update with an .http file request -->
-
-```sh
-curl \
-    --location 'http://localhost:7072/api/history' \
-    --header 'X-USER-ID: <Set the User ID here>'
-```
-
-Of course you can test it with an other tool like [Postman][postman-link] for instance.
-
-</details>
-
 ### Deploying history-func to Azure
 
 You have confirmed that your code is working fine locally, so now you can proceed to the next step: deploying it to Azure.
@@ -1262,6 +1171,16 @@ You have confirmed that your code is working fine locally, so now you can procee
 <details>
 <summary>📚 Toggle solution</summary>
 
+#### Option 1: Deploy with Azure Dev CLI
+
+You can deploy the `history-func` app using the Azure Dev CLI:
+
+```sh
+azd deploy history
+```
+
+#### Option 2 : Deploy with Azure Function Core Tools
+
 You can do this using the Visual Studio Code extension like you saw in the previous section of this lab or by command line using the Azure Function Core Tools:
 
 ```sh
@@ -1270,57 +1189,43 @@ func azure functionapp publish <NAME_OF_YOUR_HISTORY_FUNCTION_APP> --dotnet-isol
 
 </details>
 
-### Viewing browsing history in the Web App
+### Get browsing history
 
-In this last part, you will wire the newly deployed `history-func` app to the Web App using the app setting `HISTORY_API`.
-
-This will allow the Web App to communicate with your new History api (`/api/history`) to retrieve and display the current user's browsing history.
-
-![View recent browsing history](./assets/webapp-view-browsing-history.png)
+Now you can use your deployed `history-func` app to get your browsing history.
 
 <div class="task" data-title="Task">
 
-> - Update the Web App's app setting `HISTORY_API` to point to the `/api/history` API endpoint of `history-func`.
-> - Click on the UUID of the user on the top right of the Web App and make sure you can see your browsing history.
+> Call the `history-func` app to Azure using the `http/history.http` file and ensure it returns the latest products that you have viewed on the Web App
 
 </div>
 
 <details>
 <summary>📚 Toggle solution</summary>
 
-To configure the Static Web App to use the new `/api/history` endpoint you will first need to get its full url.
+Inside your resource group, search the Function App resource starting with `func-hist` and in the **Overview** tab select your function:
 
-To do that, head to the `history-func` Function App in the Azure Portal, then select the function `GetBrowsingHistory`.
+![Azure Function overview](./assets/azure-function-history-overview.png)
 
-![GetBrowsingHistory in history-func](./assets/history-func-select-http-function.png)
+Select the `GetBrowsingHistory` function and click on the **Code + Test** menu. Click on the **Get Function URL** button to copy the URL of the function with the master key.
 
-Then select the `Get Function Url` button and copy the function url:
+![Get Function URL](./assets/history-func-get-function-url.png)
 
-![Getting the url of GetBrowsingHistory](./assets/history-func-get-http-endpoint-url.png)
+Open the `http/history.http` file and replace the placeholder `<YOUR_FUNCTION_URL_HERE>` with the URL you just copied.
 
-Next, you need to add that url in the `HISTORY_API` app setting of the static web app:
+You should see something like this:
 
-![Set HISTORY_API app setting in the Static Web App](./assets/webapp-set-history-api.png)
-
-Hit `Save` and wait for the Static Web App to reload then open the url of the Static Web App.
-
-Once it gets loaded, click on the UUID of the user on the top right of the page and ensure you can see the latest products that you have viewed
-
-![View recent browsing history](./assets/webapp-view-browsing-history.png)
+![history.http file](./assets/history-func-results.png)
 
 </details>
 
-[redis-console]: https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-configure#redis-console
 [redis-scan-command]: https://redis.io/commands/scan/
 [redis-xrange-command]: https://redis.io/commands/xrange/#--and--special-ids
 [redis-insight]: https://redis.com/redis-enterprise/redis-insight/
 [key-bindings]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-cache-trigger-redispubsub?tabs=isolated-process%2Cnode-v3%2Cpython-v1&pivots=programming-language-csharp&WT.mc_id=javascript-76678-cxa#examples
 [azure-function-overview]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-overview?pivots=programming-language-csharp
-[key-notifications-setup]: https://redis.io/docs/manual/keyspace-notifications/#configuration
 [redis-triggers-sample]: https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-tutorial-functions-getting-started#set-up-the-example-code
 [redis-stream-trigger]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-cache-trigger-redisstream
 [func-start]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-core-tools-reference?tabs=v2#func-start
-[postman-link]: https://www.postman.com/
 
 ---
 

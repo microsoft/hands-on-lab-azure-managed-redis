@@ -871,6 +871,10 @@ You will have to create 2 Function Apps which react to changes in Redis to perfo
 - `cache-refresh-func`: detect expired cache keys and trigger a cache warm up to re-populate them
 - `history-func`: process browsing history events from a Redis Stream and expose them via an HTTP API
 
+The scope of this lab is the following:
+
+![Lab scope](./assets/architecture-lab-4.png)
+
 ## Lab 4.1: Refresh the cache
 
 In the previous lab about APIM you saw how to add a cache to your API without modifying its code. In this lab you will see how to refresh the cache when the data expired before the data is requested by the user.
@@ -886,19 +890,39 @@ Azure Functions are event-driven and triggered by events from various sources. T
 
 Azure Functions run on the App Service platform, which provides features such as deployment slots, continuous deployment, HTTPS support, and hybrid connections. They can be deployed in the Consumption (Serverless), dedicated App Service Plan, or Premium Plan models.
 
-### Keyspace Notifications
+### Activate Keyspace Notifications
 
-While Azure Managed Redis manages the wraping of Keyspace events, it's mandatory to detail the event types you're interested in.
+First, let's open your terminal (Ctrl + J) and run the following command to get an access token to connect to your Azure Managed Redis instance using the right scope:
 
-To do so, you'll set the maximum level of notification possible to notify all the existing events in the Azure Managed Redis **Advanced Settings** and **notify-keyspace-events**:
+```bash
+TOKEN=$(az account get-access-token --scope https://redis.azure.com/.default --query "accessToken" -o tsv)
+```
 
-![Azure Managed Redis Console](./assets/azure-cache-for-redis-console-advanced-settings.png)
+Then run the following command to get your user identifier which looks like a GUID:
 
-<div class="tip" data-title="Tips">
+```bash
+USER_ID=$(az account show --query id -o tsv)
+```
 
-> Resources : You'll find more insights [here][key-notifications-setup] on the events type that can be notified to fine-tune the notifications' scope
+Inside the resource group, search the Azure Managed Redis resource, select it and in the **Overview** menu, copy the **Endpoint** value and put it in the following command to get your Azure Managed Redis instance endpoint:
 
-</div>
+```bash
+MANAGED_REDIS_ENDPOINT=<your-redis-endpoint>.redis.azure.net:10000
+```
+
+Finally, run the following command to authenticate to your Azure Managed Redis instance using the `redis-cli` tool:
+
+```bash
+redis-cli -u redis://$USER_ID:$TOKEN@$MANAGED_REDIS_ENDPOINT --tls -c
+```
+
+Now inside your terminal, let's play with basic Redis commands. Run the following command to set a key/value pair in Redis:
+
+```bash
+config set notify-keyspace-events KEA
+```
+
+You now have the keyspace notifications activated for your Azure Managed Redis instance.
 
 ### Redis Triggered Azure Function
 
@@ -909,7 +933,7 @@ This method has an attribute called `RedisPubSubTrigger` which is used to trigge
 <div class="task" data-title="Tasks">
 
 > - Define the conditions to trigger the function based on the expiration of a key in the Azure Managed Redis
-> - The connection name of the Azure Managed Redis is defined by the environment variables prefixed with `AZURE_REDIS_CONNECTION`
+> - The connection name use a User Assigned Identity defined by the environment variables prefixed with `AZURE_REDIS_CONNECTION`
 
 </div>
 
@@ -917,8 +941,7 @@ This method has an attribute called `RedisPubSubTrigger` which is used to trigge
 
 > You can find more information about the keys here:<br>
 >
-> - The Azure Function here use the isolated process mode but at this time the documentation is not updated so use the in-process tab to see examples: [Key Binding][key-bindings]<br>
-> - [Redis key notification][key-notifications]<br>
+> The Azure Function here use the isolated process mode you have an example here: [Key Binding][key-bindings]<br>
 
 </div>
 
@@ -927,13 +950,19 @@ This method has an attribute called `RedisPubSubTrigger` which is used to trigge
 
 The `RedisPubSubTrigger` attribute is used to trigger the function when an event is raised by the Azure Managed Redis, so the first parameter is the connection name (prefix for all environment variables controlling the connection) and the second one is the event pattern to listen to.
 
-The connection string environment key `AZURE_REDIS_CONNECTION` can be specified directly because Azure Functions automatically understands that it is a connection string. Then based on the [Redis key notification documentation][key-notifications] you can use the `expired` event so the pattern to listen to the expiration event of a key will be `__keyevent@0__:expired`.
+The connection `AZURE_REDIS_CONNECTION` can be specified directly because Azure Functions automatically understands that it is the prefix to use to find the rest of the configuration online. In fact, if you go inside your resource group, search the Function App resource starting with `func-cache` inside the **Settings** > **Environment variables** menu, you will see the different environment variables prefixed with `AZURE_REDIS_CONNECTION` that are used to connect to your Azure Managed Redis instance:
+
+![Function App environment variables](./assets/function-cache-app-env-vars.png)
+
+The values are automatically injected by the infrastructure as code you applied at the beginning of the workshop. The values correspond to the user assigned identity and the endpoint of your Azure Managed Redis instance.
+
+Then you can use the `expired` event so the pattern to listen to the expiration event of a key will be `__keyevent@0__:expired`.
 
 So the definition of the function should look like this:
 
 ```csharp
 public async Task ProductsEventsTrigger(
-    [RedisPubSubTrigger("AZURE_REDIS_CONNECTION", "__keyevent@0__:expired")] string key)
+    [RedisPubSubTrigger("AZURE_REDIS_CONNECTION", "__keyevent@0__:expired")] EntryExpirationEvent expirationEvent)
 ```
 
 </details>
@@ -955,8 +984,8 @@ If you run this Azure Function and listen to the expired keys in the Azure Manag
 > - Only refresh the cache if the key contains `products:all`
 > - Use the `Const.cs` file to point to the `REDIS_KEY_PRODUCTS_ALL` environment variable
 > - Call the Catalog Api endpoint in APIM using the `IHttpClientFactory` object provided to retrieve the `products`
-> - Only this method should be modified
-> - Send a GET request on your APIM `/products` endpoint to trigger the first cache hydration
+> - Only the `ProductsEventsTrigger` method should be modified
+> - Send a GET request on your APIM `/products` endpoint to trigger the first cache hydration to test the function
 
 </div>
 
@@ -969,8 +998,10 @@ Then call the Catalog API `/products` endpoint in APIM using the `IHttpClientFac
 
 ```csharp
 public async Task ProductsEventsTrigger(
-    [RedisPubSubTrigger("AZURE_REDIS_CONNECTION", "__keyevent@0__:expired")] string key)
+    [RedisPubSubTrigger("AZURE_REDIS_CONNECTION", "__keyevent@0__:expired")] EntryExpirationEvent expirationEvent)
 {
+    string key = expirationEvent.Message;
+
     if (key.Contains(Const.REDIS_KEY_PRODUCTS_ALL))
     {
         _logger.LogInformation($"{key} just EXPIRED");
@@ -983,14 +1014,7 @@ public async Task ProductsEventsTrigger(
 }
 ```
 
-Now, to test and run it locally you need to create the `local.settings.json` file and copy the content of the `local.settings.json.template` file into it.
-
-Then you need to set the `AZURE_REDIS_CONNECTION`-prefixed environment variables to the connection details of your Azure Managed Redis and update the `CATALOG_API_URL` with the url of APIM endpoint for the Catalog API.
-
-The connection string for your Azure Managed Redis can be found in the Azure Portal. Select your Azure Managed Redis resource and in the left menu, click on **Access keys**. Then copy the value of the `Primary connection string` into your `local.settings.json` file.
-
-![Azure Managed Redis connection string][azure-cache-for-redis-connection-string]
-
+<!-- 
 To set the `CATALOG_API_URL` environment variable, go to your resource group, search the API Management resource and select it. Then copy the `Gateway URL` found in the **Overview** panel of your API Management.
 
 ![Apim gateway url](./assets/apim-gateway-url.png)
@@ -1015,13 +1039,29 @@ To debug the Cache Refresh Azure Function in VS Code, you will need to start Azu
 
 - After 60 seconds, you should see your Azure Function process the expiration and calling the APIM `/products` endpoint again : Your cache auto-refresher is now working!
 
-![Azure Func Execution](./assets/azure-function-exec.png)
+![Azure Func Execution](./assets/azure-function-exec.png) -->
 
 </details>
 
 ### Deploy the Azure Function
 
-#### Option 1 : Deploy with VS Code
+#### Option 1: Deploy with Azure Dev CLI
+
+Let's deploy your function to Azure to test it. Use the following command to deploy it using azd:
+
+```bash
+azd deploy cache-refresh
+```
+
+#### Option 2 : Deploy with Azure Function Core Tools
+
+Deploy your function using the VS Code extension or by command line:
+
+```bash
+func azure functionapp publish <NAME_OF_YOUR_FUNCTION_APP> --dotnet-isolated
+```
+
+#### Option 3 : Deploy with VS Code
 
 - Open the Azure extension in VS Code left panel
 - Make sure you're signed in to your Azure account
@@ -1030,23 +1070,13 @@ To debug the Cache Refresh Azure Function in VS Code, you will need to start Azu
 
 ![Deploy to Function App](./assets/function-app-deploy.png)
 
-#### Option 2 : Deploy with Azure Function Core Tools
-
-Deploy your function using the VS Code extension or by command line:
-
-```bash
-
-func azure functionapp publish <NAME_OF_YOUR_FUNCTION_APP> --dotnet-isolated
-
-```
-
 #### Test the Azure Function
 
 Now if you go to your Azure Function resource, in the **Overview** tab select your function:
 
-![Azure Function overview](./assets/azure-function-overview.png)
+![Azure Function overview](./assets/azure-function-cache-overview.png)
 
-Do a few calls to set a value in the cache with your `products.http` file and then inside the **Monitor** tab you should see that the function was triggered when the key `products:all` is expired:
+Do a few calls like you did in the APIM lab to set a value in the cache with your `products.http` file and then inside the **Monitor** tab you should see that the function was triggered when the key `products:all` is expired (it can take up to 5 minutes to appear):
 
 ![Azure Function logs](./assets/azure-function-logs.png)
 
@@ -1313,9 +1343,7 @@ Once it gets loaded, click on the UUID of the user on the top right of the page 
 [redis-scan-command]: https://redis.io/commands/scan/
 [redis-xrange-command]: https://redis.io/commands/xrange/#--and--special-ids
 [redis-insight]: https://redis.com/redis-enterprise/redis-insight/
-[azure-cache-for-redis-connection-string]: ./assets/azure-cache-for-redis-connection-string.png
-[key-bindings]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-cache-trigger-redispubsub?tabs=in-process%2Cnode-v3%2Cpython-v1&pivots=programming-language-csharp#examples
-[key-notifications]: https://redis.io/docs/manual/keyspace-notifications/
+[key-bindings]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-cache-trigger-redispubsub?tabs=isolated-process%2Cnode-v3%2Cpython-v1&pivots=programming-language-csharp&WT.mc_id=javascript-76678-cxa#examples
 [azure-function-overview]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-overview?pivots=programming-language-csharp
 [key-notifications-setup]: https://redis.io/docs/manual/keyspace-notifications/#configuration
 [redis-triggers-sample]: https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-tutorial-functions-getting-started#set-up-the-example-code

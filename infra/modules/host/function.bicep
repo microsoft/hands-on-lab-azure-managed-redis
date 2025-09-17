@@ -22,8 +22,8 @@ resource hostingPlan 'Microsoft.Web/serverfarms@2023-01-01' = {
   location: location
   sku: {
     tier: 'Basic'
-    name: 'B2'
-    family: 'B'
+    name: 'S3'
+    family: 'S'
     capacity: 1
   }
   properties: {

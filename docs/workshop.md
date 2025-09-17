@@ -1014,33 +1014,6 @@ public async Task ProductsEventsTrigger(
 }
 ```
 
-<!-- 
-To set the `CATALOG_API_URL` environment variable, go to your resource group, search the API Management resource and select it. Then copy the `Gateway URL` found in the **Overview** panel of your API Management.
-
-![Apim gateway url](./assets/apim-gateway-url.png)
-
-Your `CATALOG_API_URL` should look like that:
-
-```bash
-CATALOG_API_URL = "https://<APIM_GATEWAY_NAME>.azure-api.net"
-```
-
-To debug the Cache Refresh Azure Function in VS Code, you will need to start Azurite (an Azure Storage Account emulator required to debug Azure Functions locally) :
-
-- In VS Code, Press `Ctrl + Shift + P`, then search `Azurite: Start` and select this option :
-
-![Azurite Start](./assets/azurite-start.png)
-
-- Then run the Azure Function by clicking on the **Run and Debug** panel and select `Attach to Cache Refresh Function`:
-
-![Azure Function run](./assets/azure-function-run.png)
-
-- You can now call the `products` endpoint of your APIM Gateway (GET "https://<APIM_GATEWAY_NAME>.azure-api.net/products") to trigger the initial caching.
-
-- After 60 seconds, you should see your Azure Function process the expiration and calling the APIM `/products` endpoint again : Your cache auto-refresher is now working!
-
-![Azure Func Execution](./assets/azure-function-exec.png) -->
-
 </details>
 
 ### Deploy the Azure Function
@@ -1127,7 +1100,7 @@ To be able to load some streams you need to simulate a user viewing products. To
 
 To get a product ID, you can call the `/products` endpoint using `http/products.http` and copy one of the IDs from the response.
 
-Now if you rerun the `SCAN` command again, you should see a stream called `productViews`:
+Now if you rerun the `SCAN` command again, you should see a stream called `productViews` 
 
 ```sh
 SCAN 0 TYPE stream
@@ -1135,15 +1108,13 @@ SCAN 0 TYPE stream
 
 You should see a stream called `productViews`. That is the one we are interested in.
 
-![List streams in Redis Console](./assets/azure-cache-for-redis-console-list-streams.png)
-
 Next, view the list of items in the stream using the [XRANGE command][redis-xrange-command] and the special -/+ special IDs which allow us to get all items within a stream:
 
 ```sh
 XRANGE productViews - +
 ```
 
-![Inspecting the productViews stream in Redis Console](./assets/azure-cache-for-redis-view-productviews-stream.png)
+![List streams in Redis Console](./assets/azure-cache-for-redis-console-list-streams.png)
 
 You should be able to see the following item fields:
 
@@ -1151,6 +1122,7 @@ You should be able to see the following item fields:
 - `productId`: The ID of the product which was viewed
 - `productTitle`: The title of the product which was viewed
 - `date`: The time (in ISO 8601) at which the product was viewed
+
 </details>
 
 [redis-insight]: https://redis.com/redis-enterprise/redis-insight/
@@ -1161,7 +1133,7 @@ Now that you have identified the product views' stream, you will need to update 
 
 <div class="task" data-title="Task">
 
-> - Update the trigger of the function `StreamTrigger` defined in `src/history-func/ProcessProductViews.cs` so that it listens to new items in the product views' stream
+> Update the trigger of the function `StreamTrigger` defined in `src/history-func/ProcessProductViews.cs` so that it listens to new items in the product views' stream
 
 </div>
 

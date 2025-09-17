@@ -10,3 +10,4 @@
 GET {{apimEndpoint}}/{{products}}/{{id}}
 {{typeJson}}
 Authorization: Bearer {{access-token}}
+X-USER-ID: 12345

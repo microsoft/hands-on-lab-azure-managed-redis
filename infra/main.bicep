@@ -342,6 +342,7 @@ module roles './modules/security/roles.bicep' = {
     appServicePrincipalId: appService.outputs.identityPrincipalId
     appInsightsName: applicationInsights.outputs.name
     currentUserObjectId: deployer().objectId
+    aiFoundryName: aiFoundry.outputs.name
   }
 }
 

@@ -4,22 +4,20 @@ public static class AIEndpoints
 {
     public static void MapAIEndpoints(this WebApplication app)
     {
-        app.MapGet("/vectorize", async (ICosmosService cosmosService, IRedisService redisService) =>
+        app.MapPost("/vectorize", async (ICosmosService cosmosService, IRedisService redisService) =>
         {
             // Fetch data from Cosmos DB
             var products = await cosmosService.RetrieveAllProductsAsync();
 
             // Create an index and vectorize the products using Azure OpenAI
-            await redisService.CreateProductsIndexAsync(products);
+            await redisService.CreateProductsIndex(products);
 
-            return Results.Ok("Index created and products vectorized successfully.");
+            return Results.Created();
         });
         
-        app.MapGet("/search", async (string query, IRedisService redisService) =>
+        app.MapPost("/ask", async ([FromBody] AskRequest request, IRedisService redisService) =>
         {
-            // Perform a vector search using the provided query
-            // This is a placeholder implementation; replace with actual search logic
-            var searchResults = new List<string> { $"Search results for query: {query}" };
+            var searchResults = await redisService.SearchProducts(request.Input);
 
             return Results.Ok(searchResults);
         });

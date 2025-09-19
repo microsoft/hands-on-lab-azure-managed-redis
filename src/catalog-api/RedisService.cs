@@ -8,7 +8,8 @@ public interface IRedisService
     Task<string?> Get(string key);
     Task Set(string key, string value);
     Task AddToStream(string streamName, Dictionary<string, string?> data);
-    Task CreateProductsIndexAsync(IEnumerable<Product> products);
+    Task CreateProductsIndex(IEnumerable<Product> products);
+    Task<string> SearchProducts(string input);
 }
 
 public class RedisService : IRedisService
@@ -21,10 +22,11 @@ public class RedisService : IRedisService
     private readonly int _defaultTTLInSeconds = 60;
     private readonly TimeSpan _ttl; // Time To Live
 
-    private readonly string _productsCollectionName = "products-collection";
+    private readonly string _productsCollectionName = "Products-collection";
 
     public RedisService(IConfiguration configuration, IAIFoundryService aiFoundryService)
     {
+        _aiFoundryService = aiFoundryService;
         _ttl = TTL(configuration["AZURE_REDIS_TTL_IN_SECONDS"]);
         _endpoint = configuration["AZURE_REDIS_ENDPOINT"];
     }
@@ -109,18 +111,26 @@ public class RedisService : IRedisService
         await database.StreamAddAsync(streamName, entries.ToArray());
     }
 
-    public async Task CreateProductsIndexAsync(IEnumerable<Product> products)
+    private async Task<RedisVectorStore> GetRedisVectorStore()
     {
-        var embeddingClient = _aiFoundryService.GetAzureOpenAIEmbeddingClient();
-
-        Console.WriteLine("Creating Redis Vector Store index...");
         var database = await GetDatabaseAsync();
 
         var vectorStore = new RedisVectorStore(
             database,
             new() { StorageType = RedisStorageType.HashSet });
 
-        // Connect to the same collection using the VectorStore abstraction.
+        return vectorStore;
+    }
+
+    public async Task CreateProductsIndex(IEnumerable<Product> products)
+    {
+        var embeddingClient = _aiFoundryService.GetAzureOpenAIEmbeddingClient();
+
+        Console.WriteLine("Creating Redis Vector Store index...");
+
+        var vectorStore = await GetRedisVectorStore();
+
+        // Connect to a collection using the VectorStore abstraction.
         var collection = vectorStore.GetCollection<string, Product>(_productsCollectionName);
 
         // Create the collection if it doesn't exist.
@@ -135,15 +145,32 @@ public class RedisService : IRedisService
         await collection.UpsertAsync(products);
     }
 
-    public async Task SearchAsync(string query)
+    public async Task<string> SearchProducts(string input)
     {
-    //     var searchString = "What is an Application Programming Interface";
-    //     var searchVector = (await embeddingGenerator.GenerateAsync(searchString)).Vector;
-    //     var resultRecords = await collection.SearchAsync(searchVector, top: 1).ToListAsync();
+        var embeddingClient = _aiFoundryService.GetAzureOpenAIEmbeddingClient();
+        var searchVector = (await embeddingClient.GenerateEmbeddingAsync(input)).Value.ToFloats();
 
-    //   Console.WriteLine("Search string: " + searchString);
-    //     Console.WriteLine("Result: " + resultRecords.First().Record.Definition);
-    //     Console.WriteLine();
+        var vectorStore = await GetRedisVectorStore();
+        var collection = vectorStore.GetCollection<string, Product>(_productsCollectionName);
+        var resultRecords = await collection.SearchAsync(searchVector, top: 1).ToListAsync();
 
+        Console.WriteLine("Search string: " + input);
+
+        return resultRecords?.FirstOrDefault()?.Record?.Description ?? "Description non disponible";
+    }
+}
+
+static class HelperExtensions
+{
+    public static async ValueTask<List<T>> ToListAsync<T>(this IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
+    {
+        var result = new List<T>();
+
+        await foreach (var item in source.WithCancellation(cancellationToken).ConfigureAwait(false))
+        {
+            result.Add(item);
+        }
+
+        return result;
     }
 }

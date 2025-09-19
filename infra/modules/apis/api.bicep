@@ -38,6 +38,86 @@ resource getProductsOperation 'Microsoft.ApiManagement/service/apis/operations@2
   }
 }
 
+resource vectorizeOperation 'Microsoft.ApiManagement/service/apis/operations@2024-06-01-preview' = {
+  parent: productsApi
+  name: 'vectorize-data'
+  properties: {
+    displayName: 'Vectorize Data'
+    method: 'POST'
+    urlTemplate: '/vectorize'
+    description: 'Vectorize your data.'
+    request: {
+      queryParameters: []
+      headers: []
+      representations: [
+        {
+          contentType: 'application/json'
+        }
+      ]
+    }
+    responses: [
+      {
+        statusCode: 200
+        description: 'Success'
+        representations: [
+          {
+            contentType: 'application/json'
+          }
+        ]
+      }
+    ]
+  }
+}
+
+// Create a POST operation to ask questions
+resource askOperation 'Microsoft.ApiManagement/service/apis/operations@2024-06-01-preview' = {
+  parent: productsApi
+  name: 'ask-question'
+  properties: {
+    displayName: 'Ask Question'
+    method: 'POST'
+    urlTemplate: '/ask'
+    description: 'Ask a question about your data.'
+    request: {
+      queryParameters: []
+      headers: []
+      representations: [
+        {
+          contentType: 'application/json'
+          examples: {
+            default: {
+              value: {
+                question: 'What is the return policy?'
+              }
+              description: 'Example question'
+            }
+          }
+        }
+      ]
+    }
+    responses: [
+      {
+        statusCode: 200
+        description: 'Success'
+        representations: [
+          {
+            contentType: 'application/json'
+            examples: {
+              default: {
+                value: {
+                  answer: 'Our return policy lasts 30 days.'
+                }
+                description: 'Example answer'
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
+
+
 resource getProductOperation 'Microsoft.ApiManagement/service/apis/operations@2024-06-01-preview' = {
   parent: productsApi
   name: 'get-product-by-id'

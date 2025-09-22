@@ -1,13 +1,17 @@
 using Azure.AI.OpenAI;
 using Azure.AI.Projects;
 using Azure.Identity;
+using CatalogApi.Models;
 using OpenAI.Chat;
 using OpenAI.Embeddings;
+
+namespace CatalogApi.Services;
 
 public interface IAIFoundryService
 {
     EmbeddingClient GetAzureOpenAIEmbeddingClient();
     ChatClient GetAzureOpenAIChatClient();
+    Task<ChatCompletion> GetChatCompletionsAsync(string query, List<ProductSearchResult> rag);
 }
 
 public class AIFoundryService : IAIFoundryService
@@ -41,5 +45,23 @@ public class AIFoundryService : IAIFoundryService
         var chatClient = azureOpenAIClient.GetChatClient(deploymentName: _chatDeploymentName);
 
         return chatClient;
+    }
+
+    public async Task<ChatCompletion> GetChatCompletionsAsync(string query, List<ProductSearchResult> rag)
+    {
+        var chatClient = GetAzureOpenAIChatClient();
+        var context = string.Join("\n", rag.Select((s, i) => $"{i + 1}. {s.Title} : {s.Description}"));
+        var messages = new List<ChatMessage>
+        {
+            new SystemChatMessage($"""
+                context : {context}
+                Answer the question based on the context above only. Provide the product name associated with the answer as well. If the
+                information to answer the question is not present in the given context then reply "I don't know".
+                Query: {query}
+            """),
+        };
+
+        var response = await chatClient.CompleteChatAsync(messages);
+        return response;
     }
 }

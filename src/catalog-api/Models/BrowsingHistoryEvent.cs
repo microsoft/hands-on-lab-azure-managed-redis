@@ -1,3 +1,5 @@
+namespace CatalogApi.Models;
+
 public class BrowsingHistoryEvent
 {
     public string Date { get; set; }

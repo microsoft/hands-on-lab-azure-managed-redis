@@ -1,7 +1,9 @@
 using Azure.Identity;
-using Microsoft.SemanticKernel.Connectors.Redis;
+using CatalogApi.Models;
 using OpenAI.Embeddings;
 using StackExchange.Redis;
+
+namespace CatalogApi.Services;
 
 public interface IRedisService
 {
@@ -9,12 +11,13 @@ public interface IRedisService
     Task Set(string key, string value);
     Task AddToStream(string streamName, Dictionary<string, string?> data);
     Task CreateProductsIndex(IEnumerable<Product> products);
-    Task<List<string>> SearchProducts(string query);
+    Task<List<ProductSearchResult>> SearchProducts(string query);
 }
 
 public class RedisService : IRedisService
 {
     private IDatabase? _database = null;
+
     private readonly string? _endpoint;
 
     private readonly IAIFoundryService _aiFoundryService;
@@ -256,7 +259,7 @@ public class RedisService : IRedisService
     /// to find the most similar products based on their embeddings. The results include the titles and descriptions
     /// of the top matching products.
     /// </remarks>
-    public async Task<List<string>> SearchProducts(string query)
+    public async Task<List<ProductSearchResult>> SearchProducts(string query)
     {
         try
         {
@@ -275,45 +278,63 @@ public class RedisService : IRedisService
                 "RETURN", "3", "title", "description", "vector_score",
                 "DIALECT", "2");  // Use the vector search feature since version two of the query dialect.
 
-            // Process and format the search results
-            var resultArray = (RedisResult[])searchResult;
-            int totalResults = (int)resultArray[0];
-            List<string> results = new();
-            for (int i = 1; i < resultArray.Length; i += 2)
-            {
-                var fields = (RedisResult[])resultArray[i + 1];
-                string title = string.Empty;
-                string description = string.Empty;
-                string vectorScore = string.Empty;
-
-                for (int j = 0; j < fields.Length; j += 2)
-                {
-                    string fieldName = (string)fields[j];
-                    string fieldValue = (string)fields[j + 1];
-
-                    if (fieldName == "title")
-                    {
-                        title = fieldValue;
-                    }
-                    else if (fieldName == "description")
-                    {
-                        description = fieldValue;
-                    }
-                    else if (fieldName == "vector_score")
-                    {
-                        vectorScore = (1.0f - float.Parse(fieldValue)).ToString("F4");
-                    }
-                }
-
-                results.Add($"Title: {title}\nDescription: {description}");
-                Console.WriteLine($"Title: {title}\nDescription: {description}\nVector Score: {vectorScore}\n");
-            }
-
-            return results;
+            return ParseSearchResults(searchResult);
         }
         catch (Exception ex)
         {
             throw new Exception("Error occurred while performing vector search", ex);
         }
+    }
+
+    private List<ProductSearchResult> ParseSearchResults(RedisResult searchResult)
+    {
+        var resultArray = (RedisResult[])searchResult;
+        int totalResults = (int)resultArray[0];
+        var results = new List<ProductSearchResult>();
+
+        // Process results in pairs (document ID + fields)
+        for (int i = 1; i < resultArray.Length; i += 2)
+        {
+            var fields = (RedisResult[])resultArray[i + 1];
+            var searchResultItem = ParseSearchResultFields(fields);
+
+            if (searchResultItem != null)
+            {
+                results.Add(searchResultItem);
+            }
+        }
+
+        return results;
+    }
+
+    private ProductSearchResult? ParseSearchResultFields(RedisResult[] fields)
+    {
+        var result = new ProductSearchResult();
+
+        // Process field pairs (name + value)
+        for (int j = 0; j < fields.Length; j += 2)
+        {
+            string fieldName = (string)fields[j];
+            string fieldValue = (string)fields[j + 1];
+
+            switch (fieldName)
+            {
+                case "title":
+                    result.Title = fieldValue;
+                    break;
+                case "description":
+                    result.Description = fieldValue;
+                    break;
+                case "vector_score":
+                    if (float.TryParse(fieldValue, out float score))
+                    {
+                        result.VectorScore = 1.0f - score; // Convert to similarity score
+                    }
+                    break;
+            }
+        }
+
+        // Only return valid results with required fields
+        return !string.IsNullOrEmpty(result.Title) ? result : null;
     }
 }

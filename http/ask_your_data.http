@@ -9,5 +9,5 @@ Content-Type: application/json
 Authorization: Bearer {{access-token}}
 
 {
-  "query": "Shoes with city lifestyle design"
+  "query": "I want shoes with city lifestyle design, what do you suggest?"
 }

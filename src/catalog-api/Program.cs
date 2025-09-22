@@ -1,3 +1,7 @@
+using CatalogApi.Endpoints;
+using CatalogApi.Services;
+using CatalogApi.Tools;
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
 {

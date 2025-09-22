@@ -1,3 +1,7 @@
+using CatalogApi.Models;
+
+namespace CatalogApi.Services;
+
 public interface IBrowsingHistoryCacheService
 {
     Task AddViewedProductAsync(string? userId, Product product);

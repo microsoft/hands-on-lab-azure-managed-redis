@@ -17,8 +17,8 @@ public static class AIEndpoints
         
         app.MapPost("/ask", async ([FromBody] AskRequest request, IRedisService redisService) =>
         {
-            var searchResults = await redisService.SearchProducts(request.Input);
-
+            var searchResults = await redisService.SearchProducts(request.Query);
+            
             return Results.Ok(searchResults);
         });
     }

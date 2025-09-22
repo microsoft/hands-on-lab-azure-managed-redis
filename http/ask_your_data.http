@@ -9,5 +9,5 @@ Content-Type: application/json
 Authorization: Bearer {{access-token}}
 
 {
-  "input": "Shoes with city lifestyle design"
+  "query": "Shoes with city lifestyle design"
 }

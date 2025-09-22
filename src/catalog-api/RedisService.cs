@@ -269,7 +269,7 @@ public class RedisService : IRedisService
 
             // Perform vector search using KNN
             var searchResult = await database.ExecuteAsync("FT.SEARCH", _productsIndexName,
-                "(*)=>[KNN 10 @embedding $query_vec AS vector_score]",
+                "(*)=>[KNN 3 @embedding $query_vec AS vector_score]",
                 "PARAMS", "2", "query_vec", queryEmbeddingBytes,
                 "SORTBY", "vector_score", "ASC",
                 "RETURN", "3", "title", "description", "vector_score",

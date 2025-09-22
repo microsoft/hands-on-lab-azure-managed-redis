@@ -87,7 +87,7 @@ resource askOperation 'Microsoft.ApiManagement/service/apis/operations@2024-06-0
           examples: {
             default: {
               value: {
-                question: 'What is the return policy?'
+                query: 'I am doing... can you help me?'
               }
               description: 'Example question'
             }

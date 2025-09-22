@@ -1,1 +1,1 @@
-public record AskRequest(string Input);
+public record AskRequest(string Query);

@@ -1354,6 +1354,18 @@ As a side note, we really encourage you to take the time to dig in the toolbox o
 [apim-hol]: https://azure.github.io/apim-lab/
 [azure-load-testing]: https://learn.microsoft.com/en-us/azure/app-testing/load-testing/overview-what-is-azure-load-testing
 
+---
+
+# Lab 6 : AI & Vector Database
+
+In this lab you will discover how to use Azure Managed Redis to use it as a vector database to store and retrieve embeddings for your AI applications. This will allow you to build AI applications that can use your custom data to provide more relevant and accurate responses to user queries.
+
+Here is the scope of this lab:
+
+![Lab scope](./assets/architecture-lab-6.png)
+
+---
+
 # Closing the workshop
 
 The **Product Hands on Lab : Azure Managed Redis in Azure World** comes to an end : We hope you liked practicing with Azure solutions and that this lab will help you kick start your journey to caching in Azure.

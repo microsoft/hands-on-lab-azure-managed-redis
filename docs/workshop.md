@@ -1339,7 +1339,7 @@ Start by selecting the Azure Load Test instance in your resource group and click
 Create a Load test named `ProductsAPI_LoadTesting` and **Add Request** in the `Test Plan` tab:
 ![load-test-url-based](./assets/load-test-url-based.png)
 
-Add a new request named `Get Products` and set the **URL** of the operation exposed via APIM (which should look like `https://apim-lab-....azure-api.net/products`), and leave the HTTP Method to `GET`.
+Add a new request named `Get Products` and set the **URL** of the operation exposed via APIM (which should look like `https://apim-lab-....azure-api.net/products`), and leave the HTTP Method to `GET`. <br/>
 In the **Headers** tab set a Header named `Authorization` and set the value to `Bearer ${accessToken}` and validate by clicking the **Add** button. Once done, the request should look like the following capture :
 ![load-test-request](./assets/load-test-request.png)
 
@@ -1353,8 +1353,17 @@ Switch to the **Load** tab and set the parameters as follow :
 - Concurrent User per Engine : 50
 - Test Duration Minutes : 5
 - Ramp-up Time Minutes : 3
-- Leave the rest as default
+- Leave the rest as default parameters
   ![load-test-run-parameters](./assets/load-test-run-parameters.png)
+
+Hit **Review + create** to validate the configuration and disable `Run test after creation` before clicking **Create**
+![load-test-validate](./assets/load-test-validate.png)
+
+You now have a Load Test configuration ready to trigger a Run. To do so, select the Load Test configuration in the **Test** Panel and hit **Run**. Leave the `default` parameters except for the `accessToken` environment variable that needs to be filled with a valid access token to be authorized through the APIM `Products` Api and hit **Run** :
+![load-test-run](./assets/load-test-run.png)
+You might have noticed that we are sending an access token in a full text environment variable for the sake of simplicity as it reduces the parameterization process of a few steps. In production, you might want to rely on an Azure Key Vault connection to store secrets and create the load test variables as secrets for this type of data. You will find more information on this link for further reference : [Use secrets and environment variables in Azure Load Testing][load-test-secrets].
+
+A load test should start shortly after a few minutes on the `/products` GET endpoint of the `Products` api for 5 minutes with the Redis caching policy handling most of the requests that should return in about 500ms without contacting the backend Api most of the time.<br/>
 
 </details>
 
@@ -1369,32 +1378,29 @@ Switch to the **Load** tab and set the parameters as follow :
 
 </div>
 
-About 5 minutes after the benchmark has successfully ended, open the Azure Portal view on your Azure Managed Redis resource and open the **Insights** panel to gain deeper knowledge of the resource health :
+About 5 minutes after the load test has started and successfully ended, open the Azure Portal view on your Azure Managed Redis resource in the resource group (the resource should be named `redis-lab-...`) and open the **Monitoring** tab inside the **Overview** Panel :
 
-![Redis-Insights-Overview](./assets/redis-insights-overview.png)
+![redis-monitoring-view](./assets/redis-monitoring-view.png)
 
-And then inside the **Performance** tab you can check how the resource performed under load :
+A [set of specific metrics][amr-metrics] are available in the `Monitoring/Metrics` Panel that can help deep dive in the behaviour of your resource and adapt its sizing if needed.
 
-![Redis-Insights-Performance](./assets/redis-insights-performance.png)
+This set `Performance` metrics is available out of the box, with any Azure Managed Redis SKU and are precious insights to take informed decisions concerning the sizing of your caching resource. Azure Managed Redis offers the same set of features for any SKU available, and a `scaling` feature is available to help you respond to evolving RAM or Compute requirements for your applications with minimal impact.
 
-These metrics are available out of the box, with any Azure Managed Redis SKU and are precious insights to take informed decisions concerning the sizing of your caching resource.
-
-The Azure Managed Redis Enterprise SKU also comes with `autoscaling` capabilities to guarantee necessary caching resources at all times.
-
-Currently, only the Enterprise SKU support the `autoscaling` feature. However, you can do it manually using the `Premium` SKU, enabling the `cluster` option and taking advantage of Azure Monitor Alerts to respond to increasing usage trends and trigger additional node and shard provisionning.
+Currently, Azure Managed Redis doesn't support an `autoscale` feature, however you can do it manually or in a scheduled or triggered way as well by taking advantage of Azure Monitor Alerts to respond to increasing usage trends and trigger additional node and shard provisionning.
 
 ## Usage trend monitoring
 
 Let's create an [alert rule][alert-rule-creation] with Azure Monitor to send an email notification when the CPU average usage of the Azure Managed Redis resource is above `30%` for more than `1` minute. When the alert is triggered, you will send an email to notify the Ops team that the usage trend on Redis increased.
 
-In a real world scenario this alert could be coupled with a request to increase the number of nodes in the cluster to help you respond to usage increase, as well as scale down rule to reduce the number of nodes when demand drops. For simplicity and to avoid scaling delay for the lab, we'll limit to a simple email notification here.
+In a real world scenario this alert could be coupled with a request to update the [SKU of the Redis cluster][redis-sku] to help you respond to usage increase. A scale down rule will also help reducing the cluster resources when demand drops. For simplicity and to avoid scaling delay for the lab, we'll limit to a simple email notification here.<br/>
+The choice of the metric to trigger a SKU change will also be important depending on the workload of the application as you might have a CPU or RAM intensive workload that would benefit differently from a SKU change. Maybe the application will bottleneck due to a high number of parallel connections, while the operations are not CPU or RAM bound, but the overall solution would still benefit from a SKU change.
 
 <div class="task" data-title="Task">
 
 > - Create a `static alert rule` to trigger when CPU reaches `30%` on `average` for the past `1` minute
 > - Create an [`action group`][action-group-creation] that will be executed by this alert rule
 > - The `action group` must send an `email` notification to your email address
-> - Execute the memtier_benchmark utility during `5 minutes` to load the Azure Managed Redis CPU and trigger the alert
+> - Execute the `ProductsApi_LoadTesting` Test Run during `5 minutes` to load the Azure Managed Redis CPU and trigger the alert
 
 </div>
 
@@ -1463,6 +1469,9 @@ As a side note, we really encourage you to take the time to dig in the toolbox o
 [apim-hol]: https://azure.github.io/apim-lab/
 [azure-load-testing]: https://learn.microsoft.com/en-us/azure/app-testing/load-testing/overview-what-is-azure-load-testing
 [redis-perf-tools]: https://docs.azure.cn/en-us/redis/best-practices-performance
+[load-test-secrets]: https://learn.microsoft.com/en-us/azure/app-testing/load-testing/how-to-parameterize-load-tests?tabs=jmeter
+[amr-metrics]: https://learn.microsoft.com/en-us/azure/redis/monitor-cache-reference
+[redis-sku]: https://learn.microsoft.com/en-us/azure/redis/how-to-scale
 
 # Closing the workshop
 

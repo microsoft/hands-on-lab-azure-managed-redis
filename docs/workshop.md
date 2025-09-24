@@ -1324,8 +1324,8 @@ You will call the APIs developed in the earlier modules of the lab through API M
 <div class="task" data-title="Task">
 
 > - Create a `URL-based Load Test` configuration in the Azure Load Test instance with `50` vusers for `5` minutes
-> - Set a secret parameter for the Authorization header to be filled during test start
-> - Start a new load test during 5 minutes to analyze the impact of this load on the Redis usage and eviction metrics
+> - Set a Environment Variable parameter for the Authorization header to be filled during test start
+> - Start a new load test for 5 minutes to analyze the impact of this load on the Redis usage and eviction metrics
 
 </div>
 
@@ -1333,15 +1333,32 @@ You will call the APIs developed in the earlier modules of the lab through API M
 
 <summary>📚 Toggle solution</summary>
 
-Start by selecting the Azure Load Test instance in your resource group and click **Create a URL-based test** in the `Tests > Tests` panel :
+> - Start by selecting the Azure Load Test instance in your resource group and click **Create a URL-based test** in the `Tests > Tests` panel :
 
-![load-test-create](./assets/load-test-create.png)
+    ![load-test-create](./assets/load-test-create.png)
 
-> - Create a Load test named `Products_Api` and **Add Request** in the `Test Plan` tab.
-> - Create a request named `Products` and set the **URL** of the operation exposed via APIM (which should look like `https://apim-lab-....azure-api.net/products`), and leave the HTTP Method to `GET`.
-> - In the **Headers** tab set a Header named `Authorization` and set the value to `${access-token}` :
+> - Create a Load test named `ProductsAPI_LoadTesting` and **Add Request** in the `Test Plan` tab:
 
-![load-test-request](./assets/load-test-request)
+    ![load-test-url-based](./assets/load-test-url-based.png)
+
+> - Add a new request named `Get Products` and set the **URL** of the operation exposed via APIM (which should look like `https://apim-lab-....azure-api.net/products`), and leave the HTTP Method to `GET`.
+> - In the **Headers** tab set a Header named `Authorization` and set the value to `Bearer ${accessToken}` and validate by clicking the **Add** button. Once done, the request should look like the following capture :
+
+    ![load-test-request](./assets/load-test-request.png)
+
+> - Switch to the **Parameters** tab and create and environment variable named `accessToken` and set any value there, it will be replaced at runtime anyways :
+
+    ![load-test-env](./assets/load-test-env.png)
+
+> - Switch to the **Load** tab and set the parameters as follow :
+
+- - Engine Instances : 5
+- - Load Pattern : Linear
+- - Concurrent User per Engine : 50
+- - Test Duration Minutes : 5
+- - Ramp-up Time Minutes : 3
+- - Leave the rest as default
+    ![load-test-run-parameters](./assets/load-test-run-parameters.png)
 
 </details>
 

@@ -27,6 +27,8 @@ public class RedisService : IRedisService
 
     private readonly string _productsIndexName = "products_index";
 
+    private const string _productVectorPrefix = "product_vector:";
+
     public RedisService(IConfiguration configuration, IAIFoundryService aiFoundryService)
     {
         _aiFoundryService = aiFoundryService;
@@ -213,7 +215,7 @@ public class RedisService : IRedisService
             // Create the index with vector field
             await database.ExecuteAsync("FT.CREATE", _productsIndexName,
                 "ON", "HASH",
-                "PREFIX", "1", "product_vector:",
+                "PREFIX", "1", _productVectorPrefix,
                 "SCHEMA",
                 "title", "TEXT", "SORTABLE",
                 "description", "TEXT",
@@ -230,7 +232,7 @@ public class RedisService : IRedisService
                 var embeddingResponse = await embeddingClient.GenerateEmbeddingAsync(textToEmbed);
                 byte[] embeddingBytes = EmbeddingToByteArray(embeddingResponse);
 
-                var key = $"product_vector:{product.Id}";
+                var key = $"{_productVectorPrefix}{product.Id}";
                 var hash = new HashEntry[]
                 {
                         new("title", product.Title),
@@ -238,7 +240,7 @@ public class RedisService : IRedisService
                         new("embedding", embeddingBytes)
                 };
 
-                await database!.HashSetAsync(key, hash);
+                await database.HashSetAsync(key, hash);
             }
         }
         catch (Exception ex)

@@ -658,7 +658,7 @@ Infrastructure as code already linked the Azure Managed Redis Instance for any A
 
 </div>
 
-<div class="tip" data-title="tips">
+<div class="tip" data-title="Tips">
 
 > - As of today, APIM supports connecting to an external cache only by using a connection string
 > - If you need to configure your own External Cache, make sure to enable the `Access Keys Authentication` on the Redis Instance before trying to set the link
@@ -1363,6 +1363,148 @@ In this lab you will discover how to use Azure Managed Redis to use it as a vect
 Here is the scope of this lab:
 
 ![Lab scope](./assets/architecture-lab-6.png)
+
+## Store embeddings in Azure Managed Redis
+
+In this part of the lab, you will update the `catalog-api` to store the product embeddings in Azure Managed Redis.
+
+<div class="task" data-title="Task">
+
+> - Update the `CreateProductsIndex` method in the `src/catalog-api/Services/RedisService.cs` file to store the product embeddings in Azure Managed Redis
+> - Use the `StackExchange.Redis` library to store the embeddings as a hash in Redis
+> - Use the `_productsIndexName` to create a vector index in Azure Managed Redis to store the embeddings
+> - Delete the index if it already exists
+> - Use the `_productVectorPrefix` as the prefix for the keys of the products
+> - Use the `AIFoundryService` to generate the embeddings for each product
+> - Use `EmbeddingToByteArray` method provided to convert the embedding to a byte array
+> - Use the `http/vectorize_your_data.http` file to test the implementation
+
+</div>
+
+<details>
+
+<summary>📚 Toggle solution</summary>
+
+### Create the index
+
+First you need to create the index in Azure Managed Redis to store the embeddings. Inside the `CreateProductsIndex` method, you can use the `FT.CREATE` command to create the index with the following schema:
+
+```csharp
+try
+{
+    var database = await GetDatabaseAsync();
+
+    // Check if the index already exists
+    var existingIndexes = await database.ExecuteAsync("FT._LIST");
+    var indexes = (string[])existingIndexes;
+
+    // Drop the index if it exists
+    if (indexes.Contains(_productsIndexName))
+    {
+        Console.WriteLine("Dropping existing Redis Vector Store index...");
+        await database.ExecuteAsync("FT.DROPINDEX", _productsIndexName);
+    }
+
+    Console.WriteLine("Creating Redis Vector Store index...");
+
+    // Create the index with vector field
+    await database.ExecuteAsync("FT.CREATE", _productsIndexName,
+        "ON", "HASH",
+        "PREFIX", "1", _productVectorPrefix,
+        "SCHEMA",
+        "title", "TEXT", "SORTABLE",
+        "description", "TEXT",
+        "embedding", "VECTOR", "FLAT", "6", "TYPE", "FLOAT32", "DIM", "1536", "DISTANCE_METRIC", "COSINE");
+```
+
+Next, you need to generate the embeddings for each product and store them in Azure Managed Redis as a hash. You can use the `GenerateEmbeddingAsync` method from the `AIFoundryService` to generate the embeddings.
+
+```csharp
+    var embeddingClient = _aiFoundryService.GetAzureOpenAIEmbeddingClient();
+
+    foreach (var product in products)
+    {
+        // Text to generate embedding for
+        var textToEmbed = $"{product.Title} - {product.Description}";
+
+        // Generate embedding
+        var embeddingResponse = await embeddingClient.GenerateEmbeddingAsync(textToEmbed);
+        byte[] embeddingBytes = EmbeddingToByteArray(embeddingResponse);
+
+        var key = $"{_productVectorPrefix}{product.Id}";
+        var hash = new HashEntry[]
+        {
+                new("title", product.Title),
+                new("description", product.Description),
+                new("embedding", embeddingBytes)
+        };
+
+        await database.HashSetAsync(key, hash);
+    }
+}
+catch (Exception ex)
+{
+    throw new Exception("Error occurred while creating the vector index", ex);
+}
+```
+
+### Run the application
+
+Now that you have updated the `catalog-api` to store the product embeddings in Azure Managed Redis, you can
+deploy the application using the `azd` CLI:
+
+```bash
+azd deploy catalog-api
+```
+
+This will deploy the `catalog-api` to Azure and you will have to create a token to authenticate the requests like we did in the previous labs.
+
+<div class="tip" data-title="Tips">
+
+> You can directly run the `catalog-api` locally if you want to test it before deploying it to Azure. But you will have to set the environment variables in the `appsettings.Development.json` based on the `appsettings.json.template` file and set the url of your `localhost` inside the `http/vectorize_your_data.http` file.
+
+</div>
+
+Create a token using the same command as before and copy it inside the `http/vectorize_your_data.http` file:
+
+```bash
+az account get-access-token --scope https://redis.azure.com/.default --query "accessToken" -o tsv
+```
+
+Inside the `http/vectorize_your_data.http` file, you can call the `/vectorize` endpoint to create the index and store the embeddings in Azure Managed Redis.
+
+If everything is working fine, you should see a `201 Created` response.
+
+And if you want to see all the vectors stored in Azure Managed Redis, you can install the [RedisInsight][redis-insight] tool on your machine and connect to your Azure Managed Redis instance like this:
+
+First, add a new database and select **Connection settings** and then set the following values:
+
+Set the **Host** to your Azure Managed Redis instance endpoint (without the port), set the **Port** to `10000` 
+and set the **Username** to your user identifier that you can get using the following command:
+
+```bash
+az account show --query id -o tsv
+```
+
+Set the **Password** to the access token you can get using the previous command:
+
+```bash
+az account get-access-token --scope https://redis.azure.com/.default --query "accessToken" -o tsv
+```
+
+In the security tab, select **Use TLS** and click on **Add Redis Database**:
+
+![RedisInsight connection](./assets/redis-insight-connection.png)
+
+Once connected, you can select the redis database and select your index and you should see all the vectors stored in Azure Managed Redis:
+
+![RedisInsight vectors](./assets/redis-insight-vectors.png)
+
+
+</details>
+
+
+[redis-insight]: https://redis.com/redis-enterprise/redis-insight/
 
 ---
 

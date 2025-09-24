@@ -13,6 +13,11 @@ param appSettings array = []
 param azdServiceName string
 param userAssignedIdentityId string = ''
 
+@description('Always Ready configuration for Flex Consumption. Each entry is { name: string, instanceCount: int }')
+param alwaysReadyConfig array = [
+  // Example: { name: 'http', instanceCount: 1 }
+]
+
 resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' existing = {
   name: storageAccountName
 }
@@ -79,10 +84,12 @@ resource flexFuncApp 'Microsoft.Web/sites@2023-12-01' = {
           }
         }
       }
-      scaleAndConcurrency: {
-        maximumInstanceCount: maximumInstanceCount
-        instanceMemoryMB: instanceMemoryMB
-      }
+        scaleAndConcurrency: union({
+          maximumInstanceCount: maximumInstanceCount
+          instanceMemoryMB: instanceMemoryMB
+        }, length(alwaysReadyConfig) == 0 ? {} : {
+          alwaysReady: alwaysReadyConfig
+        })
       runtime: {
         name: functionAppRuntime
         version: functionAppRuntimeVersion

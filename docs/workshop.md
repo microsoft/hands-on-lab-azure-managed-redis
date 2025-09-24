@@ -733,7 +733,7 @@ You can now test the `GET /products` endpoint with the `products.http` file and 
 
 ![HTTP REST get products](./assets/apim-http-rest-before-caching.png)
 
-To reduce this time you can specify a policy to use the cache. From the APIM `API` panel, select the `Products` Api and select **All operations** in the **Inbound processing** section. Then click on the **+ Add policy** button:
+To reduce this time you will specify a policy to use the cache. From the APIM `API` panel, select the `Products` Api and select **All operations** in the **Inbound processing** section. Then click on the **+ Add policy** button:
 
 ![APIM policy](./assets/apim-in-bound-policy.png)
 

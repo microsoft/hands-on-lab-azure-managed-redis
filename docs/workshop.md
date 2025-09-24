@@ -1437,17 +1437,15 @@ Now is time to finalize the configuration of the alert rule: Giving it a `resour
 
 Now the alert is created, you can test it by generating some load on the Azure Managed Redis resource using the [RedisLabs/memtier_benchmark][redis-benchmark] tool like you did before.
 
-Run the same **redis-benchmark** command from your devcontainer/copdespace terminal as earlier, for a 5 minutes benchmark duration :
-
-```bash
-docker run --rm redislabs/memtier_benchmark:latest -h <YOUR_REDIS_RESOURCE_NAME>.redis.cache.windows.net -p 6380 -a <YOUR_REDIS_ACCESS_KEY> --test-time=300 --tls --tls-skip-verify
-```
+Run the same `ProductsApi_LoadTesting` Azure Load Test Run with a valid access-token as earlier, for a 5 minutes load test :
 
 After a few minutes, a notification like the following should be sent to your email address :
 
 ![monitor-alert-email](./assets/monitor-alert-email.png)
 
 After the benchmark ended, you will be able to check the trigger history by clicking **Alerts** and then **Alert Rules** in the Azure Managed Redis resource and select the Alert Rule you built in this lab, and open the **history** panel where you should see the alert trigger details :
+
+<!-- TODO: Retake screenshots mentioning Azure Managed Redis, it's still Azure Cache for Redis here -->
 
 ![monitor-alerts-select](./assets/monitor-alerts-select.png)
 ![monitor-alert-rules](./assets/monitor-alert-rules.png)

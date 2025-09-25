@@ -6,7 +6,6 @@
 @access-token = <Your Access token here>
 
 ###
-# @name = Get Products from APIM Endpoint
 GET {{apimEndpoint}}/{{products}}/{{id}}
 {{typeJson}}
 Authorization: Bearer {{access-token}}

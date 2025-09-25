@@ -14,7 +14,7 @@ contacts: # Required. Must match the number of authors
   - "@damienaicheh"
   - "@justrebl"
   - "@ikhemissi"
-duration_minutes: 240
+duration_minutes: 360
 tags: azure, managed redis, database, serverless, apim, cache, csu
 navigation_levels: 3
 ---

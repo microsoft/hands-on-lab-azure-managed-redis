@@ -195,58 +195,7 @@ public class RedisService : IRedisService
     /// </remarks>
     public async Task CreateProductsIndex(IEnumerable<Product> products)
     {
-        try
-        {
-            var database = await GetDatabaseAsync();
-
-            // Check if the index already exists
-            var existingIndexes = await database.ExecuteAsync("FT._LIST");
-            var indexes = (string[])existingIndexes;
-
-            // Drop the index if it exists
-            if (indexes.Contains(_productsIndexName))
-            {
-                Console.WriteLine("Dropping existing Redis Vector Store index...");
-                await database.ExecuteAsync("FT.DROPINDEX", _productsIndexName);
-            }
-
-            Console.WriteLine("Creating Redis Vector Store index...");
-
-            // Create the index with vector field
-            await database.ExecuteAsync("FT.CREATE", _productsIndexName,
-                "ON", "HASH",
-                "PREFIX", "1", _productVectorPrefix,
-                "SCHEMA",
-                "title", "TEXT", "SORTABLE",
-                "description", "TEXT",
-                "embedding", "VECTOR", "FLAT", "6", "TYPE", "FLOAT32", "DIM", "1536", "DISTANCE_METRIC", "COSINE");
-
-            var embeddingClient = _aiFoundryService.GetAzureOpenAIEmbeddingClient();
-
-            foreach (var product in products)
-            {
-                // Text to generate embedding for
-                var textToEmbed = $"{product.Title} - {product.Description}";
-
-                // Generate embedding
-                var embeddingResponse = await embeddingClient.GenerateEmbeddingAsync(textToEmbed);
-                byte[] embeddingBytes = EmbeddingToByteArray(embeddingResponse);
-
-                var key = $"{_productVectorPrefix}{product.Id}";
-                var hash = new HashEntry[]
-                {
-                        new("title", product.Title),
-                        new("description", product.Description),
-                        new("embedding", embeddingBytes)
-                };
-
-                await database.HashSetAsync(key, hash);
-            }
-        }
-        catch (Exception ex)
-        {
-            throw new Exception("Error occurred while creating the vector index", ex);
-        }
+        // TODO: Implement it
     }
 
     /// <summary>
@@ -263,29 +212,8 @@ public class RedisService : IRedisService
     /// </remarks>
     public async Task<List<ProductSearchResult>> SearchProducts(string query)
     {
-        try
-        {
-            var database = await GetDatabaseAsync();
-            var embeddingClient = _aiFoundryService.GetAzureOpenAIEmbeddingClient();
-
-            // Generate embedding for the query
-            var queryEmbeddingResponse = await embeddingClient.GenerateEmbeddingAsync(query);
-            byte[] queryEmbeddingBytes = EmbeddingToByteArray(queryEmbeddingResponse);
-
-            // Perform vector search using KNN
-            var searchResult = await database.ExecuteAsync("FT.SEARCH", _productsIndexName,
-                "(*)=>[KNN 3 @embedding $query_vec AS vector_score]",
-                "PARAMS", "2", "query_vec", queryEmbeddingBytes,
-                "SORTBY", "vector_score", "ASC",
-                "RETURN", "3", "title", "description", "vector_score",
-                "DIALECT", "2");  // Use the vector search feature since version two of the query dialect.
-
-            return ParseSearchResults(searchResult);
-        }
-        catch (Exception ex)
-        {
-            throw new Exception("Error occurred while performing vector search", ex);
-        }
+        // TODO: Implement it
+        return new List<ProductSearchResult>();
     }
 
     private List<ProductSearchResult> ParseSearchResults(RedisResult searchResult)

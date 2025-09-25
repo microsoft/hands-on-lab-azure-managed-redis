@@ -1,4 +1,8 @@
+using CatalogApi.Models;
+using CatalogApi.Services;
 using Microsoft.AspNetCore.Mvc;
+
+namespace CatalogApi.Endpoints;
 
 public static class ProductEndpoints
 {

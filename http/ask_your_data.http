@@ -1,12 +1,13 @@
 @apimEndpoint = {{$dotenv APIM_SERVICE_ENDPOINT}}
-@products = products
-@id = <Your Product ID here>
 @typeJson = Accept: application/json
 
 @access-token = <Your Access token here>
 
-###
-GET {{apimEndpoint}}/{{products}}/{{id}}
+POST {{apimEndpoint}}/ask
+Content-Type: application/json
 {{typeJson}}
 Authorization: Bearer {{access-token}}
-X-USER-ID: 12345
+
+{
+  "query": "I want shoes with city lifestyle design, what do you suggest?"
+}

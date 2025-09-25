@@ -6,9 +6,12 @@
     <UserSecretsId>a2a97614-c0f7-4b46-af3c-b230fe8ef1dd</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.3.0-beta.2" />
+    <PackageReference Include="Azure.AI.Projects" Version="1.0.0-beta.11" />
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.52.1" />
     <PackageReference Include="Microsoft.Azure.StackExchangeRedis" Version="3.2.1" />
     <PackageReference Include="Azure.Identity" Version="1.14.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="StackExchange.Redis" Version="2.9.17" />
   </ItemGroup>
 </Project>

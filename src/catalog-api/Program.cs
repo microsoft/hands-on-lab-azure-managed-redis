@@ -1,3 +1,7 @@
+using CatalogApi.Endpoints;
+using CatalogApi.Services;
+using CatalogApi.Tools;
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
 {
@@ -11,6 +15,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddSingleton<ISimulatedDatabaseLatency, SimulatedDatabaseLatency>();
+builder.Services.AddSingleton<IAIFoundryService, AIFoundryService>();
 builder.Services.AddSingleton<IRedisService, RedisService>();
 builder.Services.AddSingleton<ICosmosService, CosmosService>();
 builder.Services.AddScoped<IProductCacheService, ProductCacheService>();
@@ -21,5 +26,6 @@ var app = builder.Build();
 app.UseCors();
 
 app.MapProductEndpoints();
+app.MapAIEndpoints();
 
 app.Run();

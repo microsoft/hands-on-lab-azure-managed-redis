@@ -1,4 +1,7 @@
 using System.Text.Json;
+using CatalogApi.Models;
+
+namespace CatalogApi.Services;
 
 public interface IProductCacheService
 {

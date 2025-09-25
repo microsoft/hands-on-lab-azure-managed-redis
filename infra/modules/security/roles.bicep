@@ -7,9 +7,11 @@ param cacheFunctionPrincipalId string
 param appServicePrincipalId string
 param appInsightsName string
 param currentUserObjectId string
+param aiFoundryName string
 
 // https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/monitor#monitoring-metrics-publisher
 var metricsPublisherRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '3913510d-42f4-4e42-8a64-420c390055eb')
+var azureAiDeveloperRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '64702f94-c441-49e6-a78b-ef80e0188fee')
 
 resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' existing = {
   name: cosmosDbAccountName
@@ -160,6 +162,31 @@ resource monitoringMetricsPublisherCacheFunctionAssignment 'Microsoft.Authorizat
   properties: {
     roleDefinitionId: metricsPublisherRoleId
     principalId: cacheFunctionPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' existing = {
+  name: aiFoundryName
+}
+
+// Azure AI Developer
+resource userAzureAiDeveloper 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  name: guid(aiFoundry.id, currentUserObjectId, azureAiDeveloperRoleId)
+  scope: aiFoundry
+  properties: {
+    roleDefinitionId: azureAiDeveloperRoleId
+    principalId: currentUserObjectId
+    principalType: 'User'
+  }
+}
+
+resource appServiceAzureAiDeveloper 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  name: guid(aiFoundry.id, appServicePrincipalId, azureAiDeveloperRoleId)
+  scope: aiFoundry
+  properties: {
+    roleDefinitionId: azureAiDeveloperRoleId
+    principalId: appServicePrincipalId
     principalType: 'ServicePrincipal'
   }
 }

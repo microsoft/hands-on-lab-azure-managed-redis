@@ -1,4 +1,6 @@
-public interface ISimulatedDatabaseLatency 
+namespace CatalogApi.Tools;
+
+public interface ISimulatedDatabaseLatency
 {
     Task Wait();
 }

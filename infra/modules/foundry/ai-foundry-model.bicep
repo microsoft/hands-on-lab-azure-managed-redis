@@ -22,3 +22,5 @@ resource modelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2024-
     }
   }
 }
+
+output deploymentName string = modelDeployment.name

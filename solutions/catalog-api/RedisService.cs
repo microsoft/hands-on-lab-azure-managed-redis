@@ -291,7 +291,6 @@ public class RedisService : IRedisService
     private List<ProductSearchResult> ParseSearchResults(RedisResult searchResult)
     {
         var resultArray = (RedisResult[])searchResult;
-        int totalResults = (int)resultArray[0];
         var results = new List<ProductSearchResult>();
 
         // Process results in pairs (document ID + fields)
@@ -316,8 +315,13 @@ public class RedisService : IRedisService
         // Process field pairs (name + value)
         for (int j = 0; j < fields.Length; j += 2)
         {
-            string fieldName = (string)fields[j];
-            string fieldValue = (string)fields[j + 1];
+            string? fieldName = fields[j].IsNull ? null : (string?)fields[j];
+            string? fieldValue = fields[j + 1].IsNull ? null : (string?)fields[j + 1];
+
+            if (fieldName == null || fieldValue == null)
+            {
+                continue;
+            }
 
             switch (fieldName)
             {

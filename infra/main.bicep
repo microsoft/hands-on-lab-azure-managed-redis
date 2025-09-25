@@ -317,8 +317,8 @@ module appService './modules/host/appservice.bicep' = {
       SIMULATED_DB_LATENCY_IN_SECONDS: '2'
       PRODUCT_VIEWS_STREAM_NAME: 'productViews'
       AI_FOUNDRY_ENDPOINT: aiFoundry.outputs.endpoint
-      EMBEDDING_DEPLOYMENT_NAME: 'text-embedding-ada-002'
-      CHAT_DEPLOYMENT_NAME: 'gpt-4.1-nano'
+      EMBEDDING_DEPLOYMENT_NAME: embeddingsDeploymentModel.outputs.deploymentName
+      CHAT_DEPLOYMENT_NAME: chatDeploymentModel.outputs.deploymentName
     }
   }
 }

@@ -183,13 +183,9 @@ az provider register --namespace 'Microsoft.LoadTestService'
 </div>
 
 [repo-fork]: https://github.com/microsoft/hands-on-lab-azure-managed-redis/fork
-[azure-vs-code-extension]: https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-node-azure-pack
 [az-cli-install]: https://learn.microsoft.com/en-us/cli/azure/install-azure-cli
 [azd-cli]: https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/install-azd?tabs=winget-windows%2Cbrew-mac%2Cscript-linux&pivots=os-windows
 [az-func-core-tools]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-run-local?tabs=v4%2Clinux%2Ccsharp%2Cportal%2Cbash#install-the-azure-functions-core-tools
-[az-func-languages]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-versions#languages
-[az-naming-convention]: https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming
-[az-abrevation]: https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations
 [az-portal]: https://portal.azure.com
 [vs-code]: https://code.visualstudio.com/
 [azure-function-vs-code-extension]: https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurefunctions
@@ -1221,7 +1217,6 @@ You should see something like this:
 [azure-function-overview]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-overview?pivots=programming-language-csharp
 [redis-triggers-sample]: https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-tutorial-functions-getting-started#set-up-the-example-code
 [redis-stream-trigger]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-cache-trigger-redisstream
-[func-start]: https://learn.microsoft.com/en-us/azure/azure-functions/functions-core-tools-reference?tabs=v2#func-start
 
 ---
 
@@ -1389,10 +1384,8 @@ As a side note, we really encourage you to take the time to dig in the toolbox o
 [action-group-creation]: https://learn.microsoft.com/en-us/azure/azure-monitor/alerts/action-groups#create-an-action-group-in-the-azure-portal
 [memtier-benchmark]: https://github.com/redislabs/memtier_benchmark
 [redis-benchmark]: https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/benchmarks/
-[redis-dev-wrapper]: https://github.com/Azure/Microsoft.Azure.StackExchangeRedis/
 [jmeter]: https://jmeter.apache.org/usermanual/get-started.html
 [locust]: https://locust.io/
-[apim-hol]: https://azure.github.io/apim-lab/
 [azure-load-testing]: https://learn.microsoft.com/en-us/azure/app-testing/load-testing/overview-what-is-azure-load-testing
 [redis-perf-tools]: https://docs.azure.cn/en-us/redis/best-practices-performance
 [load-test-secrets]: https://learn.microsoft.com/en-us/azure/app-testing/load-testing/how-to-parameterize-load-tests?tabs=jmeter

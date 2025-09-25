@@ -17,6 +17,10 @@ class Program
             .ConfigureFunctionsWorkerDefaults()
             .ConfigureServices(services =>
             {
+                // Enregistrer le service de token
+                services.AddSingleton<ITokenService, TokenService>();
+                services.AddTransient<BearerTokenHandler>();
+
                 services.AddHttpClient(
                     Const.CATALOG_API_CLIENT,
                     client =>
@@ -25,6 +29,7 @@ class Program
                         client.DefaultRequestHeaders.Add("Accept", "application/json");
                     }
                 )
+                .AddHttpMessageHandler<BearerTokenHandler>()
                 .SetHandlerLifetime(TimeSpan.FromMinutes(10));
             })
 

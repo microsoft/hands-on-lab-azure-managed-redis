@@ -97,10 +97,6 @@ module apimExternalCache './modules/apis/apim-external-cache.bicep' = {
     cacheResourceEndpoint: managedRedis.outputs.endpoint
     cacheLocation: 'default'
   }
-  dependsOn: [
-    apim
-    managedRedis
-  ]
 }
 
 module cosmosDb './modules/storage/cosmos-db.bicep' = {
@@ -162,7 +158,6 @@ module cacheFunction './modules/host/function.bicep' = {
     applicationInsightsName: applicationInsights.outputs.name
     userAssignedIdentityId: cacheFunctionIdentity.outputs.id
     storageAccountName: storageAccountFunctions.outputs.name
-    deploymentStorageContainerName: cacheDeploymentPackageContainerName
     azdServiceName: 'cache-refresh'
     tags: tags
     appSettings: [
@@ -180,7 +175,7 @@ module cacheFunction './modules/host/function.bicep' = {
       }
       {
         name  : 'AZURE_REDIS_CONNECTION__redisHostName'
-        value : managedRedis.outputs.hostName
+        value : managedRedis.outputs.endpoint
       }
       {
         name  : 'AZURE_REDIS_CONNECTION__principalId'
@@ -212,8 +207,8 @@ module historyFunction './modules/host/function.bicep' = {
     appName: 'func-hist-${resourceSuffixKebabcase}'
     location: location
     applicationInsightsName: applicationInsights.outputs.name
+    userAssignedIdentityId: historyFunctionIdentity.outputs.id
     storageAccountName: storageAccountFunctions.outputs.name
-    deploymentStorageContainerName: historyDeploymentPackageContainerName
     azdServiceName: 'history'
     tags: tags
     appSettings: [
@@ -223,7 +218,7 @@ module historyFunction './modules/host/function.bicep' = {
       }
       {
         name  : 'AZURE_REDIS_CONNECTION__redisHostName'
-        value : managedRedis.outputs.hostName
+        value : managedRedis.outputs.endpoint
       }
       {
         name  : 'AZURE_REDIS_CONNECTION__principalId'
@@ -327,7 +322,19 @@ module appService './modules/host/appservice.bicep' = {
       PRODUCT_LIST_CACHE_DISABLE: '0'
       SIMULATED_DB_LATENCY_IN_SECONDS: '2'
       PRODUCT_VIEWS_STREAM_NAME: 'productViews'
+      AI_FOUNDRY_ENDPOINT: aiFoundry.outputs.endpoint
+      EMBEDDING_DEPLOYMENT_NAME: embeddingsDeploymentModel.outputs.deploymentName
+      CHAT_DEPLOYMENT_NAME: chatDeploymentModel.outputs.deploymentName
     }
+  }
+}
+
+module productsApi './modules/apis/api.bicep' = {
+  name: 'productsApi'
+  scope: resourceGroup
+  params: {
+    apimName: apim.outputs.name
+    serviceUrl: appService.outputs.uri
   }
 }
 
@@ -344,10 +351,11 @@ module roles './modules/security/roles.bicep' = {
     appServicePrincipalId: appService.outputs.identityPrincipalId
     appInsightsName: applicationInsights.outputs.name
     currentUserObjectId: deployer().objectId
+    aiFoundryName: aiFoundry.outputs.name
   }
 }
 
-output RESOURCE_GROUP string = resourceGroup.name
+output AZURE_RESOURCE_GROUP string = resourceGroup.name
 output APP_SERVICE_URI string = appService.outputs.uri
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId

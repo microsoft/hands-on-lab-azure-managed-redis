@@ -1,10 +1,9 @@
 @apimEndpoint = {{$dotenv APIM_SERVICE_ENDPOINT}}
-@products = products
 @typeJson = Accept: application/json
 
 @access-token = <Your Access token here>
 
 ###
-GET {{apimEndpoint}}/{{products}}
+POST {{apimEndpoint}}/vectorize
 {{typeJson}}
 Authorization: Bearer {{access-token}}

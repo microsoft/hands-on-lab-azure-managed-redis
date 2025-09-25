@@ -25,7 +25,7 @@ namespace History.Api
 
         [Function(nameof(ProcessProductViews))]
         public async Task StreamTrigger(
-            string entry // TODO: Remove this line and replace it with the logic of the function trigger
+           [RedisStreamTrigger("AZURE_REDIS_CONNECTION", "%PRODUCT_VIEWS_STREAM_NAME%")] string entry
         )
         {
             _logger.LogInformation("Processing a new stream entry: {entry}", entry);

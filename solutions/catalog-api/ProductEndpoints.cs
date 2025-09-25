@@ -1,11 +1,19 @@
+using CatalogApi.Models;
+using CatalogApi.Services;
+using Microsoft.AspNetCore.Mvc;
+
+namespace CatalogApi.Endpoints;
+
 public static class ProductEndpoints
 {
     public static void MapProductEndpoints(this WebApplication app)
     {
-        app.MapGet("/products", async (ICosmosService cosmosService, IProductCacheService productCacheService) => {
+        app.MapGet("/products", async (ICosmosService cosmosService, IProductCacheService productCacheService) =>
+        {
             IEnumerable<Product>? cachedProducts = await productCacheService.GetProductsAsync();
 
-            if (cachedProducts != null) {
+            if (cachedProducts != null)
+            {
                 Console.WriteLine("Returning product list from the cache");
                 return Results.Ok(cachedProducts);
             }
@@ -13,17 +21,20 @@ public static class ProductEndpoints
             // Fetch data from Cosmos DB
             var products = await cosmosService.RetrieveAllProductsAsync();
 
-            if (products.Any()) {
+            if (products.Any())
+            {
                 await productCacheService.SetProductsAsync(products);
             }
 
             return Results.Ok(products);
         });
 
-        app.MapGet("/products/{id}", async (ICosmosService cosmosService, IProductCacheService productCacheService, IBrowsingHistoryCacheService browsingHistoryCacheService, string id, [FromHeader(Name = "X-USER-ID")] string? userId) => {
+        app.MapGet("/products/{id}", async (ICosmosService cosmosService, IProductCacheService productCacheService, IBrowsingHistoryCacheService browsingHistoryCacheService, string id, [FromHeader(Name = "X-USER-ID")] string? userId) =>
+        {
             Product? cachedProduct = await productCacheService.GetProductAsync(id);
 
-            if (cachedProduct != null) {
+            if (cachedProduct != null)
+            {
                 Console.WriteLine("Returning a product description from the cache:");
                 Console.WriteLine(cachedProduct?.Id);
 
@@ -34,7 +45,8 @@ public static class ProductEndpoints
 
             var product = await cosmosService.RetrieveProductByIdAsync(id);
 
-            if (product == null) {
+            if (product == null)
+            {
                 return Results.NotFound();
             }
 

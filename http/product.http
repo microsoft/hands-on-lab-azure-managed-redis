@@ -1,10 +1,12 @@
 @apimEndpoint = {{$dotenv APIM_SERVICE_ENDPOINT}}
 @products = products
+@id = <Your Product ID here>
 @typeJson = Accept: application/json
 
 @access-token = <Your Access token here>
 
 ###
-GET {{apimEndpoint}}/{{products}}
+GET {{apimEndpoint}}/{{products}}/{{id}}
 {{typeJson}}
 Authorization: Bearer {{access-token}}
+X-USER-ID: 12345

@@ -1,49 +1,41 @@
-param planName string
 param appName string
-param location string = resourceGroup().location
+param planName string
 param storageAccountName string
-param deploymentStorageContainerName string
 param applicationInsightsName string
+param location string = resourceGroup().location
 param tags object = {}
-param functionAppRuntime string = 'dotnet-isolated'
-param functionAppRuntimeVersion string = '8.0'
-param maximumInstanceCount int = 100
-param instanceMemoryMB int = 2048
-param appSettings array = []
 param azdServiceName string
+param runtimeName string = 'dotnet-isolated'
+param runtimeVersion string = '8.0'
+param runtimeNameAndVersion string = '${runtimeName}|${runtimeVersion}'
+param linuxFxVersion string = runtimeNameAndVersion
+param extensionVersion string = '~4'
+param appSettings array = []
 param userAssignedIdentityId string = ''
-
-@description('Always Ready configuration for Flex Consumption. Each entry is { name: string, instanceCount: int }')
-param alwaysReadyConfig array = [
-  // Example: { name: 'http', instanceCount: 1 }
-]
+param alwaysOn bool = true
 
 resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' existing = {
   name: storageAccountName
 }
 
-resource appInsights 'Microsoft.Insights/components@2020-02-02' existing = {
-  name: applicationInsightsName
-}
-
-resource flexFuncPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
+resource hostingPlan 'Microsoft.Web/serverfarms@2023-01-01' = {
   name: planName
   location: location
-  tags: tags
-  kind: 'functionapp'
   sku: {
-    tier: 'FlexConsumption'
-    name: 'FC1'
+    tier: 'Basic'
+    name: 'S3'
+    family: 'S'
+    capacity: 1
   }
   properties: {
     reserved: true
   }
+  tags: tags
 }
 
-resource flexFuncApp 'Microsoft.Web/sites@2023-12-01' = {
+resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
   name: appName
   location: location
-  tags: union(tags, { 'azd-service-name': azdServiceName })
   kind: 'functionapp,linux'
   identity: empty(userAssignedIdentityId) ? {
     type: 'SystemAssigned'
@@ -54,48 +46,42 @@ resource flexFuncApp 'Microsoft.Web/sites@2023-12-01' = {
     }
   }
   properties: {
-    serverFarmId: flexFuncPlan.id
+    reserved: true
+    serverFarmId: hostingPlan.id
     siteConfig: {
-      appSettings: concat(
-        appSettings,        
-        [
-          {
-            name: 'AzureWebJobsStorage__accountName'
-            value: storage.name
-          }
-          {
-            name  : 'APPLICATIONINSIGHTS_AUTHENTICATION_STRING'
-            value : 'Authorization=AAD'
-          }
-          {
-            name  : 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-            value : 'InstrumentationKey=${appInsights.properties.InstrumentationKey};IngestionEndpoint=https://${location}.in.applicationinsights.azure.com/;LiveEndpoint=https://${location}.livediagnostics.monitor.azure.com/'
-          }
-        ]
-      )
-    }
-    functionAppConfig: {
-      deployment: {
-        storage: {
-          type: 'blobContainer'
-          value: '${storage.properties.primaryEndpoints.blob}${deploymentStorageContainerName}'
-          authentication: {
-            type: 'SystemAssignedIdentity'
-          }
+      alwaysOn: alwaysOn
+      linuxFxVersion: linuxFxVersion
+      appSettings: union([
+        {
+          name: 'AzureWebJobsStorage__accountName'
+          value: storage.name
         }
-      }
-        scaleAndConcurrency: union({
-          maximumInstanceCount: maximumInstanceCount
-          instanceMemoryMB: instanceMemoryMB
-        }, length(alwaysReadyConfig) == 0 ? {} : {
-          alwaysReady: alwaysReadyConfig
-        })
-      runtime: {
-        name: functionAppRuntime
-        version: functionAppRuntimeVersion
+        {
+          name: 'FUNCTIONS_EXTENSION_VERSION'
+          value: extensionVersion
+        }
+        {
+          name: 'APPLICATIONINSIGHTS_AUTHENTICATION_STRING'
+          value: 'Authorization=AAD'
+        }
+        {
+          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+          value: appInsights.properties.ConnectionString
+        }
+        {
+          name: 'FUNCTIONS_WORKER_RUNTIME'
+          value: runtimeName
+        }
+      ], appSettings)
+      cors: {
+        allowedOrigins: [
+          'https://portal.azure.com'
+        ]
       }
     }
+    httpsOnly: true
   }
+  tags: union(tags, { 'azd-service-name': azdServiceName })
 }
 
 // https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/storage#storage-blob-data-owner
@@ -103,15 +89,17 @@ var storageBlobDataOwnerRoleId = subscriptionResourceId('Microsoft.Authorization
 
 // Allow access from function app to storage account using a managed identity
 resource storageRoleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-  name: guid(storage.id, flexFuncApp.id, storageBlobDataOwnerRoleId)
+  name: guid(storage.id, functionApp.id, storageBlobDataOwnerRoleId)
   scope: storage
   properties: {
     roleDefinitionId: storageBlobDataOwnerRoleId
-    principalId: flexFuncApp.identity.principalId
+    principalId: functionApp.identity.principalId
     principalType: 'ServicePrincipal'
   }
 }
 
-output id string = flexFuncApp.id
-output name string = flexFuncApp.name
-output principalId string = flexFuncApp.identity.principalId
+resource appInsights 'Microsoft.Insights/components@2020-02-02' existing = {
+  name: applicationInsightsName
+}
+
+output principalId string = functionApp.identity.principalId

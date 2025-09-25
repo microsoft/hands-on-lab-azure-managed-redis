@@ -7,9 +7,11 @@ param cacheFunctionPrincipalId string
 param appServicePrincipalId string
 param appInsightsName string
 param currentUserObjectId string
+param aiFoundryName string
 
 // https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/monitor#monitoring-metrics-publisher
 var metricsPublisherRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '3913510d-42f4-4e42-8a64-420c390055eb')
+var azureAiDeveloperRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '64702f94-c441-49e6-a78b-ef80e0188fee')
 
 resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' existing = {
   name: cosmosDbAccountName
@@ -61,9 +63,10 @@ resource managedRedisDatabase 'Microsoft.Cache/redisEnterprise/databases@2025-05
   name: managedRedisDatabaseName
 }
 
-resource historyFunctionUAMIRedisEnterpriseDefaultRole 'Microsoft.Cache/redisEnterprise/databases/accessPolicyAssignments@2025-05-01-preview' = {
+// Add explicit dependencies and conditions for Redis access policy assignments
+resource historyFunctionUAMIRedisEnterpriseDefaultRole 'Microsoft.Cache/redisEnterprise/databases/accessPolicyAssignments@2025-05-01-preview' = if (!empty(historyFunctionUamiPrincipalId)) {
   parent: managedRedisDatabase
-  name: historyFunctionUamiPrincipalId
+  name: guid('historyFunctionUAMI', historyFunctionUamiPrincipalId, managedRedisDatabase.id)
   properties: {
     accessPolicyName: 'default'
     user: {
@@ -73,51 +76,60 @@ resource historyFunctionUAMIRedisEnterpriseDefaultRole 'Microsoft.Cache/redisEnt
 }
 
 // TODO: should we refactor the code and just keep a single identity per function to access AMR ?
-resource historyFunctionRedisEnterpriseDefaultRole 'Microsoft.Cache/redisEnterprise/databases/accessPolicyAssignments@2025-05-01-preview' = {
+resource historyFunctionRedisEnterpriseDefaultRole 'Microsoft.Cache/redisEnterprise/databases/accessPolicyAssignments@2025-05-01-preview' = if (!empty(historyFunctionPrincipalId)) {
   parent: managedRedisDatabase
-  name: historyFunctionPrincipalId
+  name: guid('historyFunction', historyFunctionPrincipalId, managedRedisDatabase.id)
   properties: {
     accessPolicyName: 'default'
     user: {
       objectId: historyFunctionPrincipalId
     }
   }
+  dependsOn: [
+    historyFunctionUAMIRedisEnterpriseDefaultRole
+  ]
 }
 
-resource cacheFunctionRedisEnterpriseDefaultRole 'Microsoft.Cache/redisEnterprise/databases/accessPolicyAssignments@2025-05-01-preview' = {
+resource cacheFunctionRedisEnterpriseDefaultRole 'Microsoft.Cache/redisEnterprise/databases/accessPolicyAssignments@2025-05-01-preview' = if (!empty(cacheFunctionUamiPrincipalId)) {
   parent: managedRedisDatabase
-  name: cacheFunctionUamiPrincipalId
+  name: guid('cacheFunction', cacheFunctionUamiPrincipalId, managedRedisDatabase.id)
   properties: {
     accessPolicyName: 'default'
     user: {
       objectId: cacheFunctionUamiPrincipalId
     }
   }
-  dependsOn: [managedRedisDatabase]
+  dependsOn: [
+    historyFunctionRedisEnterpriseDefaultRole
+  ]
 }
 
-resource catalogApiRedisEnterpriseDefaultRole 'Microsoft.Cache/redisEnterprise/databases/accessPolicyAssignments@2025-05-01-preview' = {
+resource catalogApiRedisEnterpriseDefaultRole 'Microsoft.Cache/redisEnterprise/databases/accessPolicyAssignments@2025-05-01-preview' = if (!empty(appServicePrincipalId)) {
   parent: managedRedisDatabase
-  name: appServicePrincipalId
+  name: guid('catalogApi', appServicePrincipalId, managedRedisDatabase.id)
   properties: {
     accessPolicyName: 'default'
     user: {
       objectId: appServicePrincipalId
     }
   }
-  dependsOn: [managedRedisDatabase]
+  dependsOn: [
+    cacheFunctionRedisEnterpriseDefaultRole
+  ]
 }
 
-resource currentuserDefaultRole 'Microsoft.Cache/redisEnterprise/databases/accessPolicyAssignments@2025-05-01-preview' = {
+resource currentuserDefaultRole 'Microsoft.Cache/redisEnterprise/databases/accessPolicyAssignments@2025-05-01-preview' = if (!empty(currentUserObjectId)) {
   parent: managedRedisDatabase
-  name: currentUserObjectId
+  name: guid('currentUser', currentUserObjectId, managedRedisDatabase.id)
   properties: {
     accessPolicyName: 'default'
     user: {
       objectId: currentUserObjectId
     }
   }
-  dependsOn: [managedRedisDatabase]
+  dependsOn: [
+    catalogApiRedisEnterpriseDefaultRole
+  ]
 }
 
 resource appInsights 'Microsoft.Insights/components@2020-02-02' existing = {
@@ -150,6 +162,31 @@ resource monitoringMetricsPublisherCacheFunctionAssignment 'Microsoft.Authorizat
   properties: {
     roleDefinitionId: metricsPublisherRoleId
     principalId: cacheFunctionPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' existing = {
+  name: aiFoundryName
+}
+
+// Azure AI Developer
+resource userAzureAiDeveloper 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  name: guid(aiFoundry.id, currentUserObjectId, azureAiDeveloperRoleId)
+  scope: aiFoundry
+  properties: {
+    roleDefinitionId: azureAiDeveloperRoleId
+    principalId: currentUserObjectId
+    principalType: 'User'
+  }
+}
+
+resource appServiceAzureAiDeveloper 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  name: guid(aiFoundry.id, appServicePrincipalId, azureAiDeveloperRoleId)
+  scope: aiFoundry
+  properties: {
+    roleDefinitionId: azureAiDeveloperRoleId
+    principalId: appServicePrincipalId
     principalType: 'ServicePrincipal'
   }
 }

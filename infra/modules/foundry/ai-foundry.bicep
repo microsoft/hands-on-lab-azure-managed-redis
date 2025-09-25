@@ -24,3 +24,4 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = {
 }
 
 output name string = aiFoundry.name
+output endpoint string = aiFoundry.properties.endpoint

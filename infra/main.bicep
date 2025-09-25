@@ -233,12 +233,6 @@ module historyFunction './modules/host/function.bicep' = {
         value : managedRedis.outputs.endpoint
       }
     ]
-    alwaysReadyConfig: [
-      {
-        name: 'http'
-        instanceCount: 1
-      }
-    ]
   }
 }
 

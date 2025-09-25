@@ -22,7 +22,7 @@ public class AIFoundryService : IAIFoundryService
 
     public AIFoundryService(IConfiguration configuration)
     {
-        _aiFoundryProjectUrl = configuration["AI_FOUNDRY_PROJECT_URL"] ?? throw new ArgumentNullException("AI_FOUNDRY_PROJECT_URL is not set in configuration");
+        _aiFoundryProjectUrl = configuration["AI_FOUNDRY_ENDPOINT"] ?? throw new ArgumentNullException("AI_FOUNDRY_ENDPOINT is not set in configuration");
         _embeddingDeploymentName = configuration["EMBEDDING_DEPLOYMENT_NAME"] ?? throw new ArgumentNullException("EMBEDDING_DEPLOYMENT_NAME is not set in configuration");
         _chatDeploymentName = configuration["CHAT_DEPLOYMENT_NAME"] ?? throw new ArgumentNullException("CHAT_DEPLOYMENT_NAME is not set in configuration");
     }

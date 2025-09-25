@@ -180,3 +180,13 @@ resource userAzureAiDeveloper 'Microsoft.Authorization/roleAssignments@2020-04-0
     principalType: 'User'
   }
 }
+
+resource appServiceAzureAiDeveloper 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  name: guid(aiFoundry.id, appServicePrincipalId, azureAiDeveloperRoleId)
+  scope: aiFoundry
+  properties: {
+    roleDefinitionId: azureAiDeveloperRoleId
+    principalId: appServicePrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}

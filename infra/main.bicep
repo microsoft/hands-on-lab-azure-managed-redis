@@ -316,7 +316,7 @@ module appService './modules/host/appservice.bicep' = {
       PRODUCT_LIST_CACHE_DISABLE: '0'
       SIMULATED_DB_LATENCY_IN_SECONDS: '2'
       PRODUCT_VIEWS_STREAM_NAME: 'productViews'
-      AI_FOUNDRY_PROJECT_URL: aiFoundry.outputs.endpoint
+      AI_FOUNDRY_ENDPOINT: aiFoundry.outputs.endpoint
       EMBEDDING_DEPLOYMENT_NAME: 'text-embedding-ada-002'
       CHAT_DEPLOYMENT_NAME: 'gpt-4.1-nano'
     }

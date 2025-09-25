@@ -118,8 +118,6 @@ To do so, click the **burger menu** in the top left corner (visible only with co
 
 ![codespace-workspace](./assets/codespace-workspace.png)
 
- <!-- TODO: Update the image with a white background pointing at the right code-workspace file -->
-
 - Select `.vscode/hands-on-lab-azure-managed-redis.code-workspace` :
 
   ![codespace-workspace-select](./assets/codespace-workspace-select.png)

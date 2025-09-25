@@ -12,6 +12,7 @@ param linuxFxVersion string = runtimeNameAndVersion
 param extensionVersion string = '~4'
 param appSettings array = []
 param userAssignedIdentityId string = ''
+param alwaysOn bool = true
 
 resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' existing = {
   name: storageAccountName
@@ -48,6 +49,7 @@ resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
     reserved: true
     serverFarmId: hostingPlan.id
     siteConfig: {
+      alwaysOn: alwaysOn
       linuxFxVersion: linuxFxVersion
       appSettings: union([
         {

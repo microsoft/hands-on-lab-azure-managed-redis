@@ -11,7 +11,6 @@ param name string
   'eastus2'
   'southcentralus'
   'swedencentral'
-  'westus3'
 ])
 param location string
 
@@ -118,6 +117,7 @@ module storageAccountFunctions './modules/storage/storage-account.bicep' = {
   scope: resourceGroup
   params: {
     location: location
+    allowBlobPublicAccess: false
     tags: tags
     name: take('stfunc${resourceSuffixLowercase}', 24)
     containers: [

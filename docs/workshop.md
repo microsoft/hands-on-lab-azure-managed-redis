@@ -105,8 +105,6 @@ The following tools and access will be necessary to run the lab in good conditio
 
   - [.Net 8][download-dotnet]
 
-  <!-- TODO: Clean if not possible to redis-cli via MSEntra Auth -->
-
 - Optional : [Redis CLI][redis-cli] installed to test a few commands in the introductory Lab 1. Not necessary if you're familiar with the basics of Redis.
 
 Once you have set up your local environment, you can clone the Hands-on-lab-azure-managed-redis repo you just forked on your machine, and open the local folder in Visual Studio Code and head to the next step.
@@ -199,8 +197,6 @@ az provider register --namespace 'Microsoft.LoadTestService'
 [git-client]: https://git-scm.com/downloads
 [github-account]: https://github.com/join
 [download-dotnet]: https://dotnet.microsoft.com/en-us/download/dotnet/8.0
-
-<!-- TODO: Clean if not possible to redis-cli via MSentra -->
 
 [redis-cli]: https://learn.microsoft.com/fr-fr/azure/redis/how-to-redis-cli-tool
 
@@ -1233,18 +1229,22 @@ You should see something like this:
 
 In this lab you will discover how to retrieve metrics and logs from Azure Managed Redis to monitor the health of your instance and take informed decisions about its sizing.
 
+Here is the scope of this lab:
+
+![Lab scope](./assets/architecture-lab-5.png)
+
 ## Azure Monitor
 
 To simulate a real world scenario, the first thing to do is to generate some load on the Azure Managed Redis resource. To be able to do this, you already deployed an [Azure Load Testing][azure-load-testing] instance with the Infrastructure as Code executed in Lab 1.
 
 Azure Load Testing is a fully managed service that enables you to generate high-scale load. It simulates traffic for your applications, regardless of where they are hosted. Developers, testers, and quality assurance (QA) engineers can use it to optimize application performance, scalability, and capacity planning. In this part of the lab, you'll use the `URL-based load test` module to quickly set up performance tests against a target endpoint using an HTTP verb and a small set of configuration options. Azure Load Testing also supports more advanced load-testing scenarios with [JMeter][jmeter] or [Locust][locust] scripts.
 
-You will call the APIs developed in the earlier modules of the lab through API Management via and Azure Load Test. Azure Managed Redis will be used to serve the content of the cache via the API Management policy, increasing the traffic on Azure Managed Redis. This will help in generating usage metrics on the resource, used to determine the overall health of the service.
+You will call the APIs developed in the earlier modules of the lab through API Management via an Azure Load Test. Azure Managed Redis will be used to serve the content of the cache via the API Management policy, increasing the traffic on Azure Managed Redis. This will help in generating usage metrics on the resource, used to determine the overall health of the service.
 
 <div class="task" data-title="Task">
 
-> - Create a `URL-based Load Test` configuration in the Azure Load Test instance with `50` vusers for `5` minutes
-> - Set a Environment Variable parameter for the Authorization header to be filled during test start
+> - Create a `URL-based Load test` configuration in the Azure Load Test instance with `50` vusers for `5` minutes
+> - Set an Environment Variable parameter for the Authorization header to be filled during test start
 > - Start a new load test for 5 minutes to analyze the impact of this load on the Redis usage and eviction metrics
 
 </div>
@@ -1254,12 +1254,14 @@ You will call the APIs developed in the earlier modules of the lab through API M
 <summary>📚 Toggle solution</summary>
 
 Start by selecting the Azure Load Test instance in your resource group and click **Create a URL-based test** in the `Tests > Tests` panel :
+
 ![load-test-create](./assets/load-test-create.png)
 
-Create a Load test named `ProductsAPI_LoadTesting` and **Add Request** in the `Test Plan` tab:
+Name your load test `ProductsAPI_LoadTesting`:
 ![load-test-url-based](./assets/load-test-url-based.png)
 
-Add a new request named `Get Products` and set the **URL** of the operation exposed via APIM (which should look like `https://apim-lab-....azure-api.net/products`), and leave the HTTP Method to `GET`. <br/>
+Then in the `Test Plan` tab click on **Add request** set the request to `Get Products` and set the **URL** of the operation exposed via APIM (which should look like `https://apim-...azure-api.net/products`), and leave the HTTP Method to `GET`. You can find the APIM url in the **Overview** tab of your APIM instance resource <br/>
+
 In the **Headers** tab set a Header named `Authorization` and set the value to `Bearer ${accessToken}` and validate by clicking the **Add** button. Once done, the request should look like the following capture :
 ![load-test-request](./assets/load-test-request.png)
 
@@ -1279,13 +1281,23 @@ Switch to the **Load** tab and set the parameters as follow :
 Hit **Review + create** to validate the configuration and disable `Run test after creation` before clicking **Create**
 ![load-test-validate](./assets/load-test-validate.png)
 
-You now have a Load Test configuration ready to trigger a Run. To do so, select the Load Test configuration in the **Test** Panel and hit **Run**. Leave the `default` parameters except for the `accessToken` environment variable that needs to be filled with a valid access token to be authorized through the APIM `Products` Api and hit **Run** :
+You now have a Load Test configuration ready to trigger a Run. To do so, select the Load Test configuration in the **Test** Panel and hit **Run**. Leave the `default` parameters except for the `accessToken` environment variable that needs to be filled with a valid access token to be authorized through the APIM `Products` Api.
+
+To generate a valid access token, you can use the following command in your terminal :
+
+```bash
+az account get-access-token --scope https://redis.azure.com/.default --query "accessToken" -o tsv
+```
+
+Copy the result and paste it in the `accessToken` environment variable and hit **Run** :
 ![load-test-run](./assets/load-test-run.png)
+
 You might have noticed that we are sending an access token in a full text environment variable for the sake of simplicity as it reduces the parameterization process of a few steps. In production, you might want to rely on an Azure Key Vault connection to store secrets and create the load test variables as secrets for this type of data. You will find more information on this link for further reference : [Use secrets and environment variables in Azure Load Testing][load-test-secrets].
 
-A load test should start shortly after a few minutes on the `/products` GET endpoint of the `Products` api for 5 minutes with the Redis caching policy handling most of the requests that should return in about 500ms without contacting the backend Api most of the time.<br/>
+A load test should start shortly after a few minutes on the `/products` GET endpoint of the `Products` api for 5 minutes with the Redis caching policy handling most of the requests that should return in an average of less than 200 ms without contacting the backend Api most of the time.<br/>
 
-</details>
+![load-test-running](./assets/load-test-results.png)
+
 
 <div class="tip" data-title="Tips">
 
@@ -1298,21 +1310,24 @@ A load test should start shortly after a few minutes on the `/products` GET endp
 
 </div>
 
-About 5 minutes after the load test has started and successfully ended, open the Azure Portal view on your Azure Managed Redis resource in the resource group (the resource should be named `redis-lab-...`) and open the **Monitoring** tab inside the **Overview** Panel :
+About 5 minutes after the load test has started and successfully ended, open the Azure Portal view on your Azure Managed Redis resource in the resource group and open the **Monitoring** tab inside the **Overview** Panel :
 
 ![redis-monitoring-view](./assets/redis-monitoring-view.png)
 
 A [set of specific metrics][amr-metrics] are available in the `Monitoring/Metrics` Panel that can help deep dive in the behaviour of your resource and adapt its sizing if needed.
 
-This set `Performance` metrics is available out of the box, with any Azure Managed Redis SKU and are precious insights to take informed decisions concerning the sizing of your caching resource. Azure Managed Redis offers the same set of features for any SKU available, and a `scaling` feature is available to help you respond to evolving RAM or Compute requirements for your applications with minimal impact.
+This set `Performance` metrics is available out of the box, with any Azure Managed Redis Tiers and are precious insights to take informed decisions concerning the sizing of your caching resource. Azure Managed Redis offers the same set of features for any SKU available, and a `scaling` feature is available to help you respond to evolving RAM or Compute requirements for your applications with minimal impact.
 
-Currently, Azure Managed Redis doesn't support an `autoscale` feature, however you can do it manually or in a scheduled or triggered way as well by taking advantage of Azure Monitor Alerts to respond to increasing usage trends and trigger additional node and shard provisionning.
+Currently, Azure Managed Redis doesn't support an `autoscale` feature, however you can do it manually or in a scheduled or triggered way as well by taking advantage of Azure Monitor Alerts to respond to increasing usage trends and trigger additional node and shard provisionning. That's what you will do in the next section of this lab.
+
+</details>
 
 ## Usage trend monitoring
 
 Let's create an [alert rule][alert-rule-creation] with Azure Monitor to send an email notification when the CPU average usage of the Azure Managed Redis resource is above `30%` for more than `1` minute. When the alert is triggered, you will send an email to notify the Ops team that the usage trend on Redis increased.
 
-In a real world scenario this alert could be coupled with a request to update the [SKU of the Redis cluster][redis-sku] to help you respond to usage increase. A scale down rule will also help reducing the cluster resources when demand drops. For simplicity and to avoid scaling delay for the lab, we'll limit to a simple email notification here.<br/>
+In a real world scenario this alert could be coupled with a request to update the [SKU of the Redis cluster][redis-sku] to help you respond to usage increase. A scale down rule will also help reducing the cluster resources when demand drops. For the lab, we will limit to a simple email notification here.<br/>
+
 The choice of the metric to trigger a SKU change will also be important depending on the workload of the application as you might have a CPU or RAM intensive workload that would benefit differently from a SKU change. Maybe the application will bottleneck due to a high number of parallel connections, while the operations are not CPU or RAM bound, but the overall solution would still benefit from a SKU change.
 
 <div class="task" data-title="Task">
@@ -1339,33 +1354,26 @@ In the **Condition** panel you just opened, make sure to fill in the trigger con
 ![monitor-alert-condition](./assets/monitor-alert-condition.png)
 
 Now you have the rules set to trigger the notification, it's time to set the actual action that will send the notification.
-To do so, click **Create action group**, set the action group to your `resource group`, give it a `name` and `Display name` and click **Next: Notifications >**:
 
-![monitor-alert-action-group](./assets/monitor-alert-action-group.png)
+In the **Actions** tab create an action group that will send an email notification when the alert is triggered:
 
-Select the **Notification Type** `Email/SMS message/Push/Voice`, tick **Email** in the panel that just opened and fill in your `email address`, then save by clicking **OK**. Once done, you'll have to give a **Name** to the notification type you just set and click **Review + Create** :
+![monitor-alert-action-group](./assets/monitor-action-tab.png)
 
-![monitor-alert-notification](./assets/monitor-alert-notification.png)
+Select the **Notification Type** `Email` and set your `email address`, then validate.
 
-Check the action group you just created is added in the Action Group list and click **Next: Details >**:
+Now is time to finalize the configuration of the alert rule: Giving it the `resource group` save location, define the **Severity** to `2 - Warning`, set an `Alert rule name` and check `Enable upon creation`. When done, hit **Review + Create** :
 
-![monitor-alert-action-group-select](./assets/monitor-alert-action-group-select.png)
-
-Now is time to finalize the configuration of the alert rule: Giving it a `resource group` save location, define the **Severity** to `2 - Warning`, set an `Alert rule name` and check `Enable upon creation`. When done, hit **Review + Create** :
-
-![monitor-alert-details](./assets/monitor-alert-details.png)
+![monitor-alert-details](./assets/monitor-detail-tab.png)
 
 Now the alert is created, you can test it by generating some load on the Azure Managed Redis resource using the [RedisLabs/memtier_benchmark][redis-benchmark] tool like you did before.
 
-Run the same `ProductsApi_LoadTesting` Azure Load Test Run with a valid access-token as earlier, for a 5 minutes load test :
+Run the same `ProductsApi_LoadTesting` Azure Load Test Run with a **valid access-token as earlier** (we recommand to regenerate one to avoid expiration). 
 
-After a few minutes, a notification like the following should be sent to your email address :
+After a few minutes, a notification like the following should be sent to your email address. If you don't see it, check your spam folder as sometimes email providers can be overzealous with their filtering, if you still don't see it, it's probably because the CPU didn't reach the threshold, so to trigger it you can modify the triffer from 30 to 25% and rerun the load test.
 
 ![monitor-alert-email](./assets/monitor-alert-email.png)
 
 After the benchmark ended, you will be able to check the trigger history by clicking **Alerts** and then **Alert Rules** in the Azure Managed Redis resource and select the Alert Rule you built in this lab, and open the **history** panel where you should see the alert trigger details :
-
-<!-- TODO: Retake screenshots mentioning Azure Managed Redis, it's still Azure Cache for Redis here -->
 
 ![monitor-alerts-select](./assets/monitor-alerts-select.png)
 ![monitor-alert-rules](./assets/monitor-alert-rules.png)

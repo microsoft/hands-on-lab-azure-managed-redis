@@ -101,10 +101,7 @@ The following tools and access will be necessary to run the lab in good conditio
 - [Azure Developer CLI][azd-cli] installed on your machine
 - [Azure Functions Core Tools][az-func-core-tools] installed, this will be useful for creating the scaffold of your Azure Functions using command line.
 - If you are using VS Code, you can also install the [Azure Function extension][azure-function-vs-code-extension]
-- The 3 following languages if you want to run all the Azure Functions solutions :
-
-  - [.Net 8][download-dotnet]
-
+- [.Net 8][download-dotnet] to run all the Azure Functions solutions
 - Optional : [Redis CLI][redis-cli] installed to test a few commands in the introductory Lab 1. Not necessary if you're familiar with the basics of Redis.
 
 Once you have set up your local environment, you can clone the Hands-on-lab-azure-managed-redis repo you just forked on your machine, and open the local folder in Visual Studio Code and head to the next step.
@@ -191,7 +188,6 @@ az provider register --namespace 'Microsoft.LoadTestService'
 [git-client]: https://git-scm.com/downloads
 [github-account]: https://github.com/join
 [download-dotnet]: https://dotnet.microsoft.com/en-us/download/dotnet/8.0
-
 [redis-cli]: https://learn.microsoft.com/fr-fr/azure/redis/how-to-redis-cli-tool
 
 ---
@@ -276,13 +272,13 @@ These structures are available with any of the pricing tiers available for an Az
 - **Memory Optimized**: Ideal for memory-intensive use cases that require a high memory-to-vCPU ratio (8:1) but don't need the highest throughput performance. It provides a lower price point for scenarios where less processing power or throughput is necessary, making it an excellent choice for development and testing environments.
 - **Balanced (Memory + Compute)** - Offers a balanced memory-to-vCPU (4:1) ratio, making it ideal for standard workloads. It provides a healthy balance of memory and compute resources.
 - **Compute Optimized** - Designed for performance-intensive workloads requiring maximum throughput, with a low memory-to-vCPU (2:1) ratio. It's ideal for applications that demand the highest performance.
-One tier stores data both in-memory and on-disk:
+  One tier stores data both in-memory and on-disk:
 
 - **Flash Optimized (preview)** - Enables Redis clusters to automatically move less frequently accessed data from memory (RAM) to NVMe storage. This reduces performance, but allows for cost-effective scaling of caches with large datasets.
 
 ### Interact with Azure Managed Redis
 
-Let's see quickly how to interact with Azure Managed Redis. 
+Let's see quickly how to interact with Azure Managed Redis.
 
 ![Lab scope](./assets/architecture-lab-1.png)
 
@@ -378,7 +374,7 @@ In this lab, you will see how to use Azure Managed Redis in your API to improve 
 
 ![Lab scope](./assets/architecture-lab-2.png)
 
- This API is an ASP.NET Core Web API written in .NET 8 and you will use the [StackExchange.Redis][stackexchange-redis] NuGet package to interact with Redis. One of the goal of this API is to provide a list of products that you will display in a web application.
+This API is an ASP.NET Core Web API written in .NET 8 and you will use the [StackExchange.Redis][stackexchange-redis] NuGet package to interact with Redis. One of the goal of this API is to provide a list of products that you will display in a web application.
 
 <div class="tip" data-title="Tips">
 
@@ -390,13 +386,11 @@ In this lab, you will see how to use Azure Managed Redis in your API to improve 
 
 <div class="info" data-title="Note">
 
-> This lab relies on two different data store systems : Azure Cosmos DB and Azure Managed Redis. While Redis queries are faster than the ones sent to a Serverless Azure Cosmos DB instance (mainly thanks to the **In-Memory data storage**), the overall latency difference on end to end API call might not be so clearly noticeable.
-> In average, pure Azure Managed Redis calls come back under 1 ms, while a Serverless Azure Cosmos DB Instance will respond in a few milliseconds.
+> This lab utilizes two distinct data storage systems: Azure Cosmos DB and Azure Managed Redis. Redis, with its in-memory architecture, consistently delivers sub-millisecond query times, while Serverless Azure Cosmos DB typically responds within a few milliseconds. However, the difference in end-to-end API latency may not always be dramatic, especially in scenarios with a single user and a small `products` dataset.
 >
-> Between the performance optimizations at a Serverless Azure Cosmos DB Instance doors, the scenario with a single user calling the API combined with such a small volume of `products` data persisted in Azure Cosmos DB, the end to end API response time discrepancy between Azure Managed Redis and Cosmos DB can be reduced.
+> Thanks to serverless optimizations in Cosmos DB, the gap in API response times between Redis and Cosmos DB can be negligible under these conditions.
 >
-> To clearly identify calls' response with or without cache, you'll add an artificial high latency while interacting with Azure Cosmos DB .
-> To do so, you'll find an environment variable named `SIMULATED_DB_LATENCY_IN_SECONDS` in the `src/catalog-api` folder inside the `appsettings.json.template` file that you'll have to fill in : The rest of the application code is ready to take this value into account.
+> To make cache hits and misses easily observable, you will inject artificial latency into Cosmos DB operations. Set the `SIMULATED_DB_LATENCY_IN_SECONDS` environment variable in the `src/catalog-api/appsettings.json.template` file—the application is already configured to honor this setting.
 
 </div>
 
@@ -619,7 +613,7 @@ If you look at the architecture that you deployed for this workshop, remember th
 
 ![Architecture reminder](./assets/architecture-lab-3.png)
 
-APIM is used as a facade for all your APIs (in this case you only have one called *Products* inside APIM), in the next section you will discover how to add a cache on your APIs using the APIM and Azure Managed Redis.
+APIM is used as a facade for all your APIs (in this case you only have one called _Products_ inside APIM), in the next section you will discover how to add a cache on your APIs using the APIM and Azure Managed Redis.
 
 ## Disabling cache in your API
 
@@ -1090,7 +1084,7 @@ To be able to load some streams you need to simulate a user viewing products. To
 
 To get a product ID, you can call the `/products` endpoint using `http/products.http` and copy one of the IDs from the response.
 
-Now if you rerun the `SCAN` command again, you should see a stream called `productViews` 
+Now if you rerun the `SCAN` command again, you should see a stream called `productViews`
 
 ```sh
 SCAN 0 TYPE stream
@@ -1291,7 +1285,6 @@ A load test should start shortly after a few minutes on the `/products` GET endp
 
 ![load-test-running](./assets/load-test-results.png)
 
-
 <div class="tip" data-title="Tips">
 
 > Other performance testing tools specifically designed for Redis benchmarking exist, such as [redislab/memtier_benchmark][memtier-benchmark] and [redis-benchmark][redis-benchmark].
@@ -1360,7 +1353,7 @@ Now is time to finalize the configuration of the alert rule: Giving it the `reso
 
 Now the alert is created, you can test it by generating some load on the Azure Managed Redis resource using the [RedisLabs/memtier_benchmark][redis-benchmark] tool like you did before.
 
-Run the same `ProductsApi_LoadTesting` Azure Load Test Run with a **valid access-token as earlier** (we recommand to regenerate one to avoid expiration). 
+Run the same `ProductsApi_LoadTesting` Azure Load Test Run with a **valid access-token as earlier** (we recommand to regenerate one to avoid expiration).
 
 After a few minutes, a notification like the following should be sent to your email address. If you don't see it, check your spam folder as sometimes email providers can be overzealous with their filtering, if you still don't see it, it's probably because the CPU didn't reach the threshold, so to trigger it you can modify the triffer from 30 to 25% and rerun the load test.
 
@@ -1401,6 +1394,7 @@ Here is the scope of this lab:
 ![Lab scope](./assets/architecture-lab-6.png)
 
 In the `catalog-api` we have provided you a file called `AIEndpoints.cs` in the `Endpoints` folder which contains the 2 endpoints you will use to test the vector database:
+
 - `POST /vectorize`: This endpoint will create a vector index in Azure Managed Redis and store the product embeddings in it
 - `POST /ask`: This endpoint will use the vector index to find the most similar products to the query and return them with a response generated by a Chat Completion model
 
@@ -1414,7 +1408,6 @@ az account get-access-token --scope https://redis.azure.com/.default --query "ac
 Open the `http/vectorize_your_data.http` file and set set the access token.
 
 Then, call the `/ask` endpoint with the default query which is asking about products that are only in the catalog of your company (remember the fake products stored in the Cosmos DB at the beginning of the workshop):
-
 
 ![Vector Database response](./assets/vector-database-empty-response.png)
 
@@ -1599,7 +1592,7 @@ And if you want to see all the vectors stored in Azure Managed Redis, you can in
 
 First, add a new database and select **Connection settings** and then set the following values:
 
-Set the **Host** to your Azure Managed Redis instance endpoint (without the port), set the **Port** to `10000` 
+Set the **Host** to your Azure Managed Redis instance endpoint (without the port), set the **Port** to `10000`
 and set the **Username** to your user identifier that you can get using the following command:
 
 ```bash
@@ -1619,7 +1612,6 @@ In the security tab, select **Use TLS** and click on **Add Redis Database**:
 Once connected, you can select the redis database and select your index and you should see all the vectors stored in Azure Managed Redis:
 
 ![RedisInsight vectors](./assets/redis-insight-vectors.png)
-
 
 </details>
 
@@ -1688,7 +1680,7 @@ Now that you have updated the `catalog-api` to search for similar products using
 
 ```bash
 azd deploy catalog-api
-``` 
+```
 
 This will deploy the `catalog-api` to Azure and you will have to create a token to authenticate the requests like we did in the previous section.
 

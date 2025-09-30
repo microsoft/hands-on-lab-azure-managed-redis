@@ -12,19 +12,10 @@ public static class ProductEndpoints
         {
             IEnumerable<Product>? cachedProducts = await productCacheService.GetProductsAsync();
 
-            if (cachedProducts != null)
-            {
-                Console.WriteLine("Returning product list from the cache");
-                return Results.Ok(cachedProducts);
-            }
-
+            // TODO: Add logic to return products from the cache
+            
             // Fetch data from Cosmos DB
             var products = await cosmosService.RetrieveAllProductsAsync();
-
-            if (products.Any())
-            {
-                await productCacheService.SetProductsAsync(products);
-            }
 
             return Results.Ok(products);
         });

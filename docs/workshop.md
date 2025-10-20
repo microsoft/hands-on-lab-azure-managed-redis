@@ -1715,6 +1715,7 @@ You can find dedicated labs here :
 - [Product Hands-on lab : Azure Serverless Architecture][hol-serverless]
 - [Product Hands-on lab : Azure Functions][hol-azure-function]
 - [Product Hands-on lab : API Management][hol-apim]
+- [Github : Azure Managed Redis Repo Samples][github-amr]
 
 Once you're done with this lab you can delete the resource group you created at the beginning.
 
@@ -1729,3 +1730,5 @@ az group delete --name <resource-group>
 [hol-serverless]: https://moaw.dev/workshop/gh:microsoft/hands-on-lab-serverless/main/docs/
 [hol-azure-function]: https://moaw.dev/workshop/gh:microsoft/hands-on-lab-azure-functions/main/docs/
 [hol-apim]: https://azure.github.io/apim-lab/
+[github-amr]: https://github.com/azuremanagedredis
+
